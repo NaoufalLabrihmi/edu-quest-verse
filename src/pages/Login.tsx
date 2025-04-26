@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { GraduationCap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,21 +17,52 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, setUser, setProfile } = useAuthStore();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // In a real app this would authenticate with Supabase
-      toast({
-        title: "Success!",
-        description: "You have been logged in successfully.",
+    try {
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      navigate('/dashboard');
-    }, 1500);
+
+      if (error) throw error;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        setUser(user);
+        setProfile(profile);
+        
+        toast({
+          title: "Welcome back!",
+          description: "You have been logged in successfully.",
+        });
+        
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

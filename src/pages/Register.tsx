@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -9,30 +9,60 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/components/ui/use-toast';
 import { GraduationCap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const Register = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const [username, setUsername] = useState('');
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, setUser, setProfile } = useAuthStore();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // In a real app this would register with Supabase
-      toast({
-        title: "Account created!",
-        description: "Your account has been created successfully.",
+    try {
+      const { data: { user }, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            role,
+          },
+        },
       });
-      navigate('/dashboard');
-    }, 1500);
+
+      if (error) throw error;
+
+      if (user) {
+        setUser(user);
+        toast({
+          title: "Account created!",
+          description: "Welcome to BrainBoost! Please verify your email to continue.",
+        });
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,15 +84,12 @@ const Register = () => {
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                className="input-focus"
               />
             </div>
             
@@ -73,9 +100,7 @@ const Register = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
                 required
-                className="input-focus"
               />
             </div>
             
@@ -86,60 +111,38 @@ const Register = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
                 required
-                className="input-focus"
               />
-              <p className="text-xs text-gray-500">
-                Password must be at least 8 characters long
-              </p>
             </div>
-            
+
             <div className="space-y-2">
               <Label>I am a...</Label>
-              <RadioGroup 
-                value={role} 
-                onValueChange={setRole}
-                className="flex flex-col space-y-1"
-              >
+              <RadioGroup value={role} onValueChange={(value: 'student' | 'teacher') => setRole(value)}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="student" id="student" />
-                  <Label htmlFor="student" className="cursor-pointer">Student</Label>
+                  <Label htmlFor="student">Student</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="teacher" id="teacher" />
-                  <Label htmlFor="teacher" className="cursor-pointer">Teacher</Label>
+                  <Label htmlFor="teacher">Teacher</Label>
                 </div>
               </RadioGroup>
             </div>
-            
+
             <Button 
               type="submit" 
-              className="w-full bg-edu-purple-500 hover:bg-edu-purple-600 btn-bounce"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{' '}
               <Link to="/login" className="text-edu-blue-600 hover:text-edu-blue-800 font-medium">
                 Sign in
-              </Link>
-            </p>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              By signing up, you agree to our{' '}
-              <Link to="/terms" className="underline hover:text-gray-700">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="underline hover:text-gray-700">
-                Privacy Policy
               </Link>
             </p>
           </div>
