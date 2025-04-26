@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Check, Plus, Trash2, Edit2, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase as baseSupabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 const supabase: any = baseSupabase;
 
 // Question types as in DB
@@ -66,6 +67,7 @@ const CreateQuiz = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   // --- UI helpers ---
   const handleCopyCode = () => {
@@ -210,6 +212,9 @@ const CreateQuiz = () => {
       setQuestions([]);
       setCurrentQuestion(defaultQuestion());
       setEditingIndex(null);
+      
+      // Navigate to dashboard after successful creation
+      navigate('/dashboard');
     } catch (err: any) {
       toast({
         title: 'Error creating quiz',
