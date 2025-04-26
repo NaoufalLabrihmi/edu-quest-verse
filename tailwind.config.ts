@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,59 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// EduQuestVerse custom colors
+				"edu-purple": {
+					DEFAULT: "#6C63FF",
+					50: "#F1F0FF",
+					100: "#E3E1FF",
+					200: "#C7C3FF",
+					300: "#ABA5FF",
+					400: "#8E87FF",
+					500: "#6C63FF",
+					600: "#4035FF",
+					700: "#1507FF",
+					800: "#0D00D9",
+					900: "#0A00A6"
+				},
+				"edu-blue": {
+					DEFAULT: "#4A94FF",
+					50: "#EDF5FF",
+					100: "#DBEAFF",
+					200: "#B5D4FF",
+					300: "#8FBEFF",
+					400: "#69A9FF",
+					500: "#4A94FF",
+					600: "#0F70FF",
+					700: "#0056D6",
+					800: "#00429F",
+					900: "#002E6F"
+				},
+				"edu-pink": {
+					DEFAULT: "#FF6B9B",
+					50: "#FFF0F5",
+					100: "#FFE1EC",
+					200: "#FFC3D9",
+					300: "#FFA5C6",
+					400: "#FF88B2",
+					500: "#FF6B9B",
+					600: "#FF3979",
+					700: "#FF0758",
+					800: "#D60043",
+					900: "#A30033"
+				},
+				"edu-orange": {
+					DEFAULT: "#FF9A4A",
+					50: "#FFF3E9",
+					100: "#FFE7D3",
+					200: "#FFCFA6",
+					300: "#FFB779",
+					400: "#FFAC5F",
+					500: "#FF9A4A",
+					600: "#FF8117",
+					700: "#E36A00",
+					800: "#B05200",
+					900: "#7D3A00"
 				}
 			},
 			borderRadius: {
@@ -69,26 +123,53 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
-				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+				"accordion-down": {
+					from: { height: "0" },
+					to: { height: "var(--radix-accordion-content-height)" },
 				},
-				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
-				}
+				"accordion-up": {
+					from: { height: "var(--radix-accordion-content-height)" },
+					to: { height: "0" },
+				},
+				"float": {
+					"0%, 100%": { transform: "translateY(0)" },
+					"50%": { transform: "translateY(-10px)" },
+				},
+				"pulse-soft": {
+					"0%, 100%": { opacity: "1" },
+					"50%": { opacity: "0.8" },
+				},
+				"scale-in": {
+					"0%": { transform: "scale(0)", opacity: "0" },
+					"100%": { transform: "scale(1)", opacity: "1" },
+				},
+				"scale-out": {
+					"0%": { transform: "scale(1)", opacity: "1" },
+					"100%": { transform: "scale(0)", opacity: "0" },
+				},
+				"slide-up": {
+					"0%": { transform: "translateY(20px)", opacity: "0" },
+					"100%": { transform: "translateY(0)", opacity: "1" },
+				},
+				"celebrate": {
+					"0%": { transform: "scale(0) rotate(0deg)" },
+					"50%": { transform: "scale(1.2) rotate(10deg)" },
+					"100%": { transform: "scale(1) rotate(0deg)" },
+				},
 			},
 			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				"accordion-down": "accordion-down 0.2s ease-out",
+				"accordion-up": "accordion-up 0.2s ease-out",
+				"float": "float 3s ease-in-out infinite",
+				"pulse-soft": "pulse-soft 2s ease-in-out infinite",
+				"scale-in": "scale-in 0.2s ease-out",
+				"scale-out": "scale-out 0.2s ease-in",
+				"slide-up": "slide-up 0.3s ease-out",
+				"celebrate": "celebrate 0.5s ease-out",
+			},
+			fontFamily: {
+				sans: ["Inter", "sans-serif"],
+				display: ["Lexend", "sans-serif"],
 			}
 		}
 	},
