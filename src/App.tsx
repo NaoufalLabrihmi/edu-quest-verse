@@ -19,6 +19,7 @@ import ForumPage from "./pages/ForumPage";
 import NotFound from "./pages/NotFound";
 import Quizzes from './pages/Quizzes';
 import QuizPage from './pages/QuizPage';
+import QuizResults from './pages/QuizResults';
 import EditQuiz from './pages/EditQuiz';
 import { QuizWaitingRoom } from './components/quiz/QuizWaitingRoom';
 import { ActiveQuiz } from './components/quiz/ActiveQuiz';
@@ -151,6 +152,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <ActiveQuiz />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id/results"
+              element={
+                <ProtectedRoute requireAuth>
+                  <QuizResults />
                 </ProtectedRoute>
               }
             />

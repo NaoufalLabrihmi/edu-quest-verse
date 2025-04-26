@@ -174,6 +174,98 @@ export type Database = {
           }
         ]
       }
+      quiz_state: {
+        Row: {
+          id: string;
+          quiz_id: string;
+          current_question_index: number;
+          time_remaining: number;
+          is_completed: boolean;
+          last_updated: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          quiz_id: string;
+          current_question_index?: number;
+          time_remaining?: number;
+          is_completed?: boolean;
+          last_updated?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          quiz_id?: string;
+          current_question_index?: number;
+          time_remaining?: number;
+          is_completed?: boolean;
+          last_updated?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quiz_state_quiz_id_fkey";
+            columns: ["quiz_id"];
+            referencedRelation: "quizzes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      participant_answers: {
+        Row: {
+          id: string;
+          quiz_id: string;
+          question_id: string;
+          participant_id: string;
+          answer: string;
+          is_correct: boolean;
+          points_earned: number;
+          response_time: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          quiz_id: string;
+          question_id: string;
+          participant_id: string;
+          answer: string;
+          is_correct: boolean;
+          points_earned: number;
+          response_time: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          quiz_id?: string;
+          question_id?: string;
+          participant_id?: string;
+          answer?: string;
+          is_correct?: boolean;
+          points_earned?: number;
+          response_time?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "participant_answers_quiz_id_fkey";
+            columns: ["quiz_id"];
+            referencedRelation: "quizzes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "participant_answers_question_id_fkey";
+            columns: ["question_id"];
+            referencedRelation: "questions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "participant_answers_participant_id_fkey";
+            columns: ["participant_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     }
     Views: {
       [_ in never]: never
@@ -182,6 +274,14 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      increment_score: {
+        Args: {
+          quiz_id: string;
+          student_id: string;
+          points_to_add: number;
+        };
+        Returns: void;
       }
     }
     Enums: {

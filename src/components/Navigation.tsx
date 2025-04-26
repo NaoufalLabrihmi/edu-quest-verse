@@ -193,6 +193,12 @@ export function Navigation() {
                   >
                     Login
                   </Link>
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 text-white font-medium hover:from-edu-purple-700 hover:to-edu-blue-700 transition-all duration-200 shadow-sm hover:shadow"
+                  >
+                    Register
+                  </Link>
                 </div>
               )}
             </nav>
@@ -275,12 +281,18 @@ export function Navigation() {
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-1">
+                <div className="flex flex-col space-y-2 py-2">
                   <Link
                     to="/login"
                     className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-4 py-3 rounded-lg bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 text-white font-medium hover:from-edu-purple-700 hover:to-edu-blue-700 transition-all duration-200 shadow-sm hover:shadow"
+                  >
+                    Register
                   </Link>
                 </div>
               )}

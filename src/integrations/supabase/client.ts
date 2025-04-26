@@ -13,3 +13,8 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Add quiz_state to the Database type
+export type Tables = Database['public']['Tables'];
+export type QuizState = Tables['quiz_state']['Row'];
+export type ParticipantAnswer = Tables['participant_answers']['Row'];
