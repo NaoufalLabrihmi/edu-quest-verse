@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import { supabase } from '@/integrations/supabase/client'
 import { User } from '@supabase/supabase-js'
 
@@ -22,81 +21,45 @@ type AuthState = {
   checkAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      profile: null,
-      initialized: false,
-      setUser: (user) => set({ user, initialized: true }),
-      setProfile: (profile) => set({ profile }),
-      signOut: async () => {
-        try {
-          // Clear Supabase session
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-
-          // Clear all storage
-          localStorage.clear();
-          sessionStorage.clear();
-
-          // Reset store state
-          set({ 
-            user: null, 
-            profile: null,
-            initialized: true 
-          });
-        } catch (error) {
-          console.error('Error in signOut:', error);
-          // Still try to clear state even if Supabase logout fails
-          localStorage.clear();
-          sessionStorage.clear();
-          set({ 
-            user: null, 
-            profile: null,
-            initialized: true 
-          });
-        }
-      },
-      checkAuth: async () => {
-        try {
-          // Get current session
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session?.user) {
-            set({ user: null, profile: null, initialized: true });
-            return;
-          }
-
-          // Set user
-          set({ user: session.user });
-
-          // Get profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            set({ profile });
-          }
-
-          set({ initialized: true });
-        } catch (error) {
-          console.error('Error checking auth:', error);
-          set({ user: null, profile: null, initialized: true });
-        }
-      },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
-        user: state.user,
-        profile: state.profile,
-      }),
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  user: null,
+  profile: null,
+  initialized: false,
+  setUser: (user) => set({ user, initialized: true }),
+  setProfile: (profile) => set({ profile }),
+  signOut: async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      set({ user: null, profile: null, initialized: true });
+      await get().checkAuth();
+    } catch (error) {
+      console.error('Error in signOut:', error);
+      set({ user: null, profile: null, initialized: true });
+      await get().checkAuth();
     }
-  )
-);
+  },
+  checkAuth: async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ user: null, profile: null, initialized: true });
+        return;
+      }
+      set({ user: session.user });
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (profile) {
+        set({ profile });
+      }
+      set({ initialized: true });
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      set({ user: null, profile: null, initialized: true });
+    }
+  },
+}));
 
