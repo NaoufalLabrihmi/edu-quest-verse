@@ -3,18 +3,25 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AuthProvider } from "@/components/AuthProvider";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthProvider } from "@/lib/auth/auth-context";
 
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ConfirmEmail from "./pages/auth/ConfirmEmail";
 import Dashboard from "./pages/Dashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+import ProfessorDashboard from "./pages/ProfessorDashboard";
 import CreateQuiz from "./pages/CreateQuiz";
 import ShopPage from "./pages/ShopPage";
 import ForumPage from "./pages/ForumPage";
 import NotFound from "./pages/NotFound";
-import ConfirmEmail from "./pages/auth/ConfirmEmail";
+import Quizzes from './pages/Quizzes';
+import QuizPage from './pages/QuizPage';
+import EditQuiz from './pages/EditQuiz';
+import { QuizWaitingRoom } from './components/quiz/QuizWaitingRoom';
+import { ActiveQuiz } from './components/quiz/ActiveQuiz';
 
 const queryClient = new QueryClient();
 
@@ -28,7 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             
-            {/* Auth Routes - Only for non-authenticated users */}
+            {/* Auth Routes */}
             <Route
               path="/login"
               element={
@@ -46,15 +53,15 @@ const App = () => (
               }
             />
             <Route
-              path="/auth/confirm-email"
+              path="/confirm-email"
               element={
-                <ProtectedRoute requireUnauth>
+                <ProtectedRoute>
                   <ConfirmEmail />
                 </ProtectedRoute>
               }
             />
 
-            {/* Protected Routes - Only for authenticated users */}
+            {/* Dashboard Routes */}
             <Route
               path="/dashboard"
               element={
@@ -64,13 +71,41 @@ const App = () => (
               }
             />
             <Route
-              path="/create-quiz"
+              path="/student-dashboard"
               element={
                 <ProtectedRoute requireAuth>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/professor-dashboard"
+              element={
+                <ProtectedRoute requireAuth>
+                  <ProfessorDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Quiz Management Routes */}
+            <Route
+              path="/create-quiz"
+              element={
+                <ProtectedRoute requireAuth requireProfessor>
                   <CreateQuiz />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/edit-quiz/:id"
+              element={
+                <ProtectedRoute requireAuth requireProfessor>
+                  <EditQuiz />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* General Routes */}
             <Route
               path="/shop"
               element={
@@ -84,6 +119,38 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <ForumPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quizzes"
+              element={
+                <ProtectedRoute requireAuth requireProfessor>
+                  <Quizzes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id"
+              element={
+                <ProtectedRoute requireAuth>
+                  <QuizPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id/waiting-room"
+              element={
+                <ProtectedRoute requireAuth>
+                  <QuizWaitingRoom />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id/active"
+              element={
+                <ProtectedRoute requireAuth>
+                  <ActiveQuiz />
                 </ProtectedRoute>
               }
             />

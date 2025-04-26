@@ -36,6 +36,144 @@ export type Database = {
         }
         Relationships: []
       }
+      quizzes: {
+        Row: {
+          id: string
+          created_at: string
+          title: string
+          description: string
+          access_code: string
+          status: string
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          title: string
+          description: string
+          access_code: string
+          status: string
+          created_by: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          title?: string
+          description?: string
+          access_code?: string
+          status?: string
+          created_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      questions: {
+        Row: {
+          id: string
+          created_at: string
+          quiz_id: string
+          question_text: string
+          question_type: string
+          correct_answer: string
+          options: string[]
+          points: number
+          time_limit: number
+          point_multiplier: number
+          order_number: number
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          quiz_id: string
+          question_text: string
+          question_type: string
+          correct_answer: string
+          options: string[]
+          points: number
+          time_limit: number
+          point_multiplier: number
+          order_number: number
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          quiz_id?: string
+          question_text?: string
+          question_type?: string
+          correct_answer?: string
+          options?: string[]
+          points?: number
+          time_limit?: number
+          point_multiplier?: number
+          order_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      quiz_participants: {
+        Row: {
+          id: string;
+          quiz_id: string;
+          student_id: string;
+          status: string;
+          joined_at: string;
+          started_at: string | null;
+          completed_at: string | null;
+          score: number | null;
+          created_at: string;
+          updated_at: string;
+        }
+        Insert: {
+          id?: string;
+          quiz_id: string;
+          student_id: string;
+          status: string;
+          joined_at?: string;
+          started_at?: string | null;
+          completed_at?: string | null;
+          score?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Update: {
+          id?: string;
+          quiz_id?: string;
+          student_id?: string;
+          status?: string;
+          joined_at?: string;
+          started_at?: string | null;
+          completed_at?: string | null;
+          score?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_participants_quiz_id_fkey"
+            columns: ["quiz_id"]
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_participants_student_id_fkey"
+            columns: ["student_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

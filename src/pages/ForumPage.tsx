@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
@@ -140,7 +139,7 @@ const ForumPage = () => {
   
   return (
     <div className="flex flex-col min-h-screen">
-      <Navigation isLoggedIn={true} userRole="student" userName="Student" userPoints={100} />
+      <Navigation />
       
       <main className="flex-grow bg-gray-50 py-8">
         <div className="container mx-auto px-4">

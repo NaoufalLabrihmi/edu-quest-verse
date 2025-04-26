@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth/auth-context';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -18,55 +19,46 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, checkAuth } = useAuthStore();
+  const { user: authUser, loading } = useAuth();
+  const { profile, checkAuth, initialized } = useAuthStore();
   const isProfessor = profile?.role === 'teacher' || profile?.role === 'admin';
 
   useEffect(() => {
-    // If we have a user but no profile, try to load the profile
-    if (user && !profile) {
+    if (!loading && authUser && !profile) {
       checkAuth();
     }
-  }, [user, profile, checkAuth]);
+  }, [loading, authUser, profile, checkAuth]);
 
   useEffect(() => {
-    console.log('ProtectedRoute state:', {
-      user: !!user,
-      profile: profile,
-      isProfessor,
-      requireAuth,
-      requireProfessor
-    });
+    if (loading || !initialized) return;
 
-    if (requireAuth && !user) {
+    if (requireAuth && !authUser) {
       toast({
         title: "Authentication required",
         description: "Please sign in to access this page",
         variant: "destructive",
       });
       navigate('/login');
-    } else if (requireUnauth && user) {
-      // Only redirect to dashboard if trying to access auth pages
+    } else if (requireUnauth && authUser) {
       const isAuthPage = window.location.pathname === '/login' || 
                         window.location.pathname === '/register' || 
                         window.location.pathname === '/auth/confirm-email';
       if (isAuthPage) {
         navigate('/dashboard');
       }
-    } else if (requireProfessor && !isProfessor) {
-      console.log('Access denied - not a professor:', { profile, isProfessor });
+    } else if (requireProfessor && (!profile || !isProfessor)) {
       toast({
         title: "Access denied",
         description: "This page is only accessible to professors",
         variant: "destructive",
       });
-      navigate('/dashboard');
+      navigate(isProfessor ? '/professor-dashboard' : '/student-dashboard');
     }
-  }, [user, profile, navigate, requireAuth, requireUnauth, requireProfessor, isProfessor, toast]);
+  }, [authUser, profile, navigate, requireAuth, requireUnauth, requireProfessor, isProfessor, toast, loading, initialized]);
 
-  // Don't render anything until we have the necessary data
-  if (requireAuth && !user) return null;
-  if (requireUnauth && user) return null;
-  if (requireProfessor && (!profile || !isProfessor)) return null;
+  if (loading || !initialized || (requireAuth && !authUser) || (requireUnauth && authUser) || (requireProfessor && !profile)) {
+    return null;
+  }
 
   return <>{children}</>;
 }; 

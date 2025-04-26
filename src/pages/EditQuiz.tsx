@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -19,7 +20,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Check, Plus, Trash2, Edit2, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 // Question types as in DB
 const QUESTION_TYPES = [
@@ -40,6 +40,7 @@ interface Question {
   points: number;
   timeLimit: number;
   pointMultiplier: number;
+  order_number: number;
 }
 
 const defaultQuestion = (): Question => ({
@@ -51,9 +52,11 @@ const defaultQuestion = (): Question => ({
   points: 1,
   timeLimit: 30,
   pointMultiplier: 1,
+  order_number: 0,
 });
 
-const CreateQuiz = () => {
+const EditQuiz = () => {
+  const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -62,18 +65,59 @@ const CreateQuiz = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(defaultQuestion());
-  const [accessCode, setAccessCode] = useState(
-    Math.random().toString(36).substring(2, 8).toUpperCase()
-  );
+  const [accessCode, setAccessCode] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // --- UI helpers ---
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(accessCode);
-    toast({ title: 'Access code copied!' });
+  useEffect(() => {
+    fetchQuiz();
+  }, [id]);
+
+  const fetchQuiz = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('quizzes')
+        .select(`
+          *,
+          questions(*)
+        `)
+        .eq('id', id)
+        .eq('created_by', user?.id)
+        .single();
+
+      if (error) throw error;
+
+      setQuizTitle(data.title);
+      setQuizDescription(data.description);
+      setAccessCode(data.access_code);
+
+      const formattedQuestions = data.questions.map((q: any) => ({
+        id: q.id,
+        type: q.question_type as QuestionType,
+        text: q.question_text,
+        options: q.options || [],
+        correctOption: q.question_type === 'multiple_choice' ? q.options.indexOf(q.correct_answer) : undefined,
+        answer: q.question_type === 'true_false' ? q.correct_answer === 'true' : q.correct_answer,
+        points: q.points,
+        timeLimit: q.time_limit,
+        pointMultiplier: q.point_multiplier,
+        order_number: q.order_number,
+      }));
+
+      setQuestions(formattedQuestions);
+    } catch (error) {
+      console.error('Error fetching quiz:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load quiz. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // --- Question logic ---
   const handleAddOrEditQuestion = () => {
     if (!currentQuestion.text.trim()) {
       toast({ title: 'Question text required', variant: 'destructive' });
@@ -96,7 +140,7 @@ const CreateQuiz = () => {
       );
       setEditingQuestionIndex(null);
     } else {
-      setQuestions([...questions, { ...questionToSave }]);
+      setQuestions([...questions, { ...questionToSave, order_number: questions.length }]);
     }
     setCurrentQuestion(defaultQuestion());
   };
@@ -132,7 +176,11 @@ const CreateQuiz = () => {
     });
   };
 
-  // --- Save Quiz ---
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({ title: 'Access code copied!' });
+  };
+
   const handleSaveQuiz = async () => {
     if (!quizTitle.trim() || questions.length === 0) {
       toast({
@@ -146,24 +194,28 @@ const CreateQuiz = () => {
     setIsSaving(true);
 
     try {
-      // First, create the quiz
-      const { data: quizData, error: quizError } = await supabase
+      // First, update the quiz
+      const { error: quizError } = await supabase
         .from('quizzes')
-        .insert({
+        .update({
           title: quizTitle,
           description: quizDescription,
-          access_code: accessCode,
-          status: 'draft',
-          created_by: user?.id,
         })
-        .select()
-        .single();
+        .eq('id', id);
 
       if (quizError) throw quizError;
 
-      // Then, create the questions
+      // Delete existing questions
+      const { error: deleteError } = await supabase
+        .from('questions')
+        .delete()
+        .eq('quiz_id', id);
+
+      if (deleteError) throw deleteError;
+
+      // Insert updated questions
       const questionData = questions.map((q, index) => ({
-        quiz_id: quizData.id,
+        quiz_id: id,
         question_text: q.text,
         question_type: q.type,
         correct_answer: q.type === 'multiple_choice' 
@@ -185,20 +237,11 @@ const CreateQuiz = () => {
       if (questionsError) throw questionsError;
 
       toast({
-        title: 'Quiz created!',
-        description: `Your quiz "${quizTitle}" has been created.`,
+        title: 'Quiz updated!',
+        description: `Your quiz "${quizTitle}" has been updated.`,
       });
 
-      // Reset form
-      setQuizTitle('');
-      setQuizDescription('');
-      setAccessCode(Math.random().toString(36).substring(2, 8).toUpperCase());
-      setQuestions([defaultQuestion()]);
-      setCurrentQuestion(defaultQuestion());
-      setEditingQuestionIndex(null);
-      
-      // Navigate to dashboard after successful creation
-      navigate('/dashboard');
+      navigate('/quizzes');
     } catch (error) {
       console.error('Error saving quiz:', error);
       toast({
@@ -211,16 +254,35 @@ const CreateQuiz = () => {
     }
   };
 
-  // --- UI ---
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark">
+        <Navigation />
+        <main className="flex-grow py-8">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+            <p className="mt-4 text-gray-400">Loading quiz...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark">
       <Navigation />
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Create a New Quiz</h1>
-            <p className="text-lg text-gray-300">Design your interactive quiz with questions and launch it for your class!</p>
+            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+              Edit Quiz
+            </h1>
+            <p className="text-lg text-gray-300">
+              Modify your quiz questions and settings
+            </p>
           </div>
+
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
             <h2 className="text-2xl font-bold mb-4 text-indigo-300">Quiz Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -241,28 +303,18 @@ const CreateQuiz = () => {
                   <Input
                     id="access-code"
                     value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                    maxLength={6}
+                    readOnly
                     className="text-center font-mono text-lg bg-gray-900 border-indigo-500 text-indigo-300 tracking-widest shadow-inner"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     className="border-indigo-500 text-indigo-300 hover:bg-indigo-900"
-                    onClick={handleCopyCode}
+                    onClick={() => handleCopyCode(accessCode)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2 border-indigo-500 text-indigo-300 hover:bg-indigo-900"
-                    onClick={() => setAccessCode(Math.random().toString(36).substring(2, 8).toUpperCase())}
-                  >
-                    Regenerate
-                  </Button>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">Students will use this code to access your quiz</p>
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="description">Description</Label>
@@ -277,6 +329,7 @@ const CreateQuiz = () => {
               </div>
             </div>
           </div>
+
           {/* Questions Section */}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
             <h2 className="text-2xl font-bold mb-4 text-pink-300">Quiz Questions</h2>
@@ -516,7 +569,9 @@ const CreateQuiz = () => {
             </div>
           </div>
           <div className="flex justify-end space-x-4">
-            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">Cancel</Button>
+            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => navigate('/quizzes')}>
+              Cancel
+            </Button>
             <Button
               onClick={handleSaveQuiz}
               disabled={isSaving || !quizTitle || questions.length === 0}
@@ -532,4 +587,4 @@ const CreateQuiz = () => {
   );
 };
 
-export default CreateQuiz;
+export default EditQuiz; 

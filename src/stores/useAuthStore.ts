@@ -47,15 +47,31 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         return;
       }
       set({ user: session.user });
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      if (profile) {
-        set({ profile });
+      
+      // Try to get profile up to 3 times
+      let profile = null;
+      let attempts = 0;
+      while (!profile && attempts < 3) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (data) {
+          profile = data;
+          break;
+        }
+        attempts++;
+        // Wait a bit before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-      set({ initialized: true });
+      
+      if (profile) {
+        set({ profile, initialized: true });
+      } else {
+        console.error('Failed to load profile after multiple attempts');
+        set({ profile: null, initialized: true });
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
       set({ user: null, profile: null, initialized: true });

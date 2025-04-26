@@ -14,9 +14,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
@@ -38,7 +36,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [checkAuth, setUser, setProfile]);
+  }, [checkAuth]);
 
   return <>{children}</>;
 }; 
