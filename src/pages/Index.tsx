@@ -1,13 +1,15 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { GraduationCap, MessageCircle, ShoppingBag } from 'lucide-react';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const Index = () => {
   const [enteredCode, setEnteredCode] = useState('');
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
   
   const handleJoinQuiz = (e: React.FormEvent) => {
     e.preventDefault();

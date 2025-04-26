@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { GraduationCap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/useAuthStore';
+import type { User } from '@supabase/supabase-js';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -32,31 +33,78 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      const { data: { user }, error } = await supabase.auth.signUp({
+      console.log('Starting registration process...', { email, username, role });
+
+      // Basic validation
+      if (username.length < 3) {
+        throw new Error('Username must be at least 3 characters long');
+      }
+
+      if (!email || !password || !username) {
+        throw new Error('All fields are required');
+      }
+
+      // 1. Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username,
-            role,
+            username: username,
+            role: role,
           },
         },
       });
 
-      if (error) throw error;
+      console.log('Auth response received:', { 
+        success: !!authData?.user, 
+        userId: authData?.user?.id,
+        error: authError?.message 
+      });
 
-      if (user) {
-        setUser(user);
-        toast({
-          title: "Account created!",
-          description: "Welcome to BrainBoost! Please verify your email to continue.",
-        });
-        navigate('/dashboard');
+      if (authError) {
+        console.error('Auth Error:', authError);
+        throw authError;
       }
-    } catch (error: any) {
+
+      if (!authData.user?.id) {
+        console.error('No user ID returned from signup');
+        throw new Error('Registration failed - no user ID returned');
+      }
+
+      // Set the user in state
+      setUser(authData.user);
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Account created!",
+        description: "Welcome to EduQuestVerse! Please check your email to verify your account.",
+      });
+
+      // Navigate to a confirmation page instead of dashboard
+      navigate('/auth/confirm-email');
+
+    } catch (error: any) {
+      console.error('Registration Error:', {
+        message: error.message,
+        name: error.name,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      let errorMessage = 'An error occurred during registration';
+      
+      if (error.message.includes('duplicate key')) {
+        errorMessage = 'This username is already taken';
+      } else if (error.message.includes('Database error')) {
+        errorMessage = 'There was an issue creating your account. Please try again later.';
+      } else {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Registration Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
