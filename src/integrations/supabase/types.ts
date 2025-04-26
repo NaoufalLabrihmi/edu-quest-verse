@@ -183,6 +183,7 @@ export type Database = {
           is_completed: boolean;
           last_updated: string;
           created_at: string;
+          skipped_questions: number[];
         };
         Insert: {
           id?: string;
@@ -192,6 +193,7 @@ export type Database = {
           is_completed?: boolean;
           last_updated?: string;
           created_at?: string;
+          skipped_questions?: number[];
         };
         Update: {
           id?: string;
@@ -201,6 +203,7 @@ export type Database = {
           is_completed?: boolean;
           last_updated?: string;
           created_at?: string;
+          skipped_questions?: number[];
         };
         Relationships: [
           {

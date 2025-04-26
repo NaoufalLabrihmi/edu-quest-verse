@@ -16,7 +16,8 @@ import {
   Lightbulb,
   Award,
   BarChart2,
-  PieChart
+  PieChart,
+  XCircle
 } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -57,6 +58,7 @@ interface QuizStateUpdate {
   time_remaining?: number;
   is_completed?: boolean;
   last_updated?: string;
+  skipped_questions?: number[];
 }
 
 // Add interface for participant answers with username
@@ -90,6 +92,16 @@ export function ActiveQuiz() {
   const [answerStats, setAnswerStats] = useState<{[key: string]: number}>({});
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [loadingAnswers, setLoadingAnswers] = useState(false);
+  const [isQuestionSkipped, setIsQuestionSkipped] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [questionStats, setQuestionStats] = useState<{
+    totalAnswers: number;
+    answerDistribution: { [key: string]: number };
+    correctCount: number;
+  } | null>(null);
+  const [totalParticipantsCount, setTotalParticipantsCount] = useState(0);
+  const [currentAnswersCount, setCurrentAnswersCount] = useState(0);
 
   // Function to fetch the current quiz state
   const fetchQuizState = async () => {
@@ -380,49 +392,112 @@ export function ActiveQuiz() {
     }
   }, [timeLeft, quiz, isSubmitting, showFeedback, isStateLoaded]);
 
+  // Add subscription for question results
+  useEffect(() => {
+    if (!id || isProfessor) return;
+
+    const resultsSubscription = supabase
+      .channel(`quiz-results-${id}`)
+      .on('broadcast', { event: 'show_question_results' }, (payload) => {
+        if (payload.payload.question_index === currentQuestion) {
+          setShowResults(true);
+          setQuestionStats(payload.payload.stats);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      resultsSubscription.unsubscribe();
+    };
+  }, [id, currentQuestion, isProfessor]);
+
+  // Subscribe to answer counts
+  useEffect(() => {
+    if (!id || !quiz) return;
+
+    const answerCountSubscription = supabase
+      .from('participant_answers')
+      .select('*', { count: 'exact' })
+      .eq('quiz_id', id)
+      .eq('question_id', quiz.questions[currentQuestion].id)
+      .then(({ count }) => {
+        setCurrentAnswersCount(count || 0);
+      });
+
+    const participantCountSubscription = supabase
+      .from('quiz_participants')
+      .select('*', { count: 'exact' })
+      .eq('quiz_id', id)
+      .then(({ count }) => {
+        setTotalParticipantsCount(count || 0);
+      });
+
+    // Subscribe to new answers
+    const realtimeSubscription = supabase
+      .channel(`answers-${id}-${currentQuestion}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'participant_answers',
+        filter: `quiz_id=eq.${id} AND question_id=eq.${quiz.questions[currentQuestion].id}`
+      }, () => {
+        setCurrentAnswersCount(prev => prev + 1);
+      })
+      .subscribe();
+
+    return () => {
+      realtimeSubscription.unsubscribe();
+    };
+  }, [id, currentQuestion, quiz]);
+
+  // Check if everyone has answered or time is up
+  useEffect(() => {
+    if (!quiz || !id || isProfessor || showResults) return;
+
+    const shouldShowResults = timeLeft === 0 || (totalParticipantsCount > 0 && currentAnswersCount >= totalParticipantsCount);
+    
+    if (shouldShowResults) {
+      // Fetch and show results
+      fetchQuestionResults();
+      setShowResults(true);
+    }
+  }, [timeLeft, currentAnswersCount, totalParticipantsCount, quiz, id, isProfessor, showResults]);
+
   const handleSelectAnswer = (answer: string) => {
-    if (isSubmitting || showFeedback || isProfessor) return;
+    if (isSubmitting || hasAnswered || showResults) return;
     setSelectedAnswer(answer);
   };
 
   const handleSubmitAnswer = async () => {
-    if (!quiz || isSubmitting || isProfessor) return;
+    if (!quiz || isSubmitting || hasAnswered || !selectedAnswer) return;
     
     try {
       setIsSubmitting(true);
       const question = quiz.questions[currentQuestion];
       
-      // Check if answer is correct
-      const correct = selectedAnswer === question.correct_answer;
-      
       // Calculate points based on time and correctness
       const timePercentage = timeLeft / question.time_limit;
+      const correct = selectedAnswer === question.correct_answer;
       const basePoints = correct ? question.points : 0;
       const timeBonusPoints = correct ? Math.floor(question.points * 0.5 * timePercentage) : 0;
       const pointsEarned = basePoints + timeBonusPoints;
       
-      setIsCorrect(correct);
-      setEarnedPoints(pointsEarned);
-      setTotalPoints(prev => prev + pointsEarned);
-      
       // Record the answer in database
-      const { error } = await supabase
+      const { error: answerError } = await supabase
         .from('participant_answers')
         .insert({
           quiz_id: quiz.id,
           question_id: question.id,
           participant_id: user?.id,
-          answer: selectedAnswer || '',
+          answer: selectedAnswer,
           is_correct: correct,
           points_earned: pointsEarned,
           response_time: question.time_limit - timeLeft
         });
         
-      if (error) {
-        console.error('Error recording answer:', error);
-      }
+      if (answerError) throw answerError;
       
-      // Update participant score using our custom function
+      // Update participant score
       const { error: scoreError } = await supabase
         .rpc('increment_score', { 
           quiz_id: quiz.id,
@@ -430,25 +505,39 @@ export function ActiveQuiz() {
           points_to_add: pointsEarned
         });
         
-      if (scoreError) {
-        console.error('Error updating score:', scoreError);
-      }
+      if (scoreError) throw scoreError;
+
+      setHasAnswered(true);
+      setIsCorrect(correct);
+      setEarnedPoints(pointsEarned);
+      setTotalPoints(prev => prev + pointsEarned);
       
-      // Show feedback
-      setShowFeedback(true);
-      
-      // Wait for the next question to be shown by the professor
-      // The state subscription will handle moving to the next question
+      toast({
+        title: "Answer Submitted",
+        description: "Waiting for other students to finish...",
+      });
       
     } catch (error) {
       console.error('Error submitting answer:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit your answer',
+        description: 'Failed to submit your answer. Please try again.',
         variant: 'destructive',
       });
+      setIsSubmitting(false);
     }
   };
+
+  // Reset states when moving to next question
+  useEffect(() => {
+    if (!quiz) return;
+    setSelectedAnswer(null);
+    setHasAnswered(false);
+    setShowResults(false);
+    setQuestionStats(null);
+    setIsSubmitting(false);
+    setCurrentAnswersCount(0);
+  }, [currentQuestion]);
 
   // Add function to fetch participant answers for the current question
   const fetchQuestionResults = async () => {
@@ -460,14 +549,12 @@ export function ActiveQuiz() {
       // Get the current question
       const question = quiz.questions[currentQuestion];
       
-      // Fetch all participant answers for this question
+      // Fetch all participant answers for this question with proper join to profiles
       const { data, error } = await supabase
         .from('participant_answers')
         .select(`
           *,
-          profiles:participant_id (
-            username
-          )
+          profiles:profiles(username)
         `)
         .eq('quiz_id', id)
         .eq('question_id', question.id);
@@ -504,12 +591,77 @@ export function ActiveQuiz() {
     }
   };
 
+  const handleSkipQuestion = async () => {
+    if (!quiz || !isProfessor || !id || !quizStateId) return;
+    
+    try {
+      // Stop the timer by setting it to 0
+      setTimeLeft(0);
+      
+      // Set question as skipped in UI
+      setIsQuestionSkipped(true);
+      
+      // Show results for the current question
+      setShowQuestionResults(true);
+      fetchQuestionResults();
+      
+      // Update state to indicate question is skipped
+      const { data: currentState, error: getError } = await supabase
+        .from('quiz_state')
+        .select('skipped_questions')
+        .eq('id', quizStateId)
+        .single();
+        
+      if (getError) {
+        console.error('Error fetching current state:', getError);
+      }
+      
+      // Create or update the skipped questions array
+      const skippedQuestions = currentState?.skipped_questions || [];
+      skippedQuestions.push(currentQuestion);
+      
+      // Update quiz state with skipped question and timer stopped
+      const { error } = await supabase
+        .from('quiz_state')
+        .update({ 
+          skipped_questions: skippedQuestions,
+          time_remaining: 0 // Set timer to 0 in database
+        })
+        .eq('id', quizStateId);
+        
+      if (error) {
+        console.error('Error updating skipped questions:', error);
+      }
+      
+      // Broadcast to students that the question was skipped
+      const channel = supabase.channel(`quiz:${id}`);
+      await channel.send({
+        type: 'broadcast',
+        event: 'question_skipped',
+        payload: { 
+          quiz_id: id,
+          question_index: currentQuestion,
+          time_remaining: 0
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error skipping question:', error);
+      toast({
+        title: "Error",
+        description: "Failed to skip question",
+        variant: "destructive",
+      });
+    }
+  };
+
   const moveToNextQuestion = () => {
     if (!quiz || !isProfessor) return;
     
     // Reset question results state
     setShowQuestionResults(false);
     setParticipantAnswers([]);
+    setIsQuestionSkipped(false);
     
     if (currentQuestion < quiz.questions.length - 1) {
       const nextQuestion = currentQuestion + 1;
@@ -564,6 +716,61 @@ export function ActiveQuiz() {
     // Navigate to results page
     navigate(`/quiz/${id}/results`);
   };
+
+  // Add skipped question handling inside the component
+  useEffect(() => {
+    if (!id) return;
+    
+    // Subscribe to the question_skipped event
+    const skippedQuestionSubscription = supabase
+      .channel(`quiz:${id}-skipped`)
+      .on('broadcast', { event: 'question_skipped' }, (payload) => {
+        if (!isProfessor && payload.payload) {
+          // Handle skipped question for students
+          const { question_index, time_remaining } = payload.payload;
+          
+          if (currentQuestion === question_index) {
+            // Stop the timer
+            setTimeLeft(0);
+            
+            // Show feedback immediately
+            setShowFeedback(true);
+            setIsCorrect(false);
+            
+            toast({
+              title: "Question Skipped",
+              description: "The professor has skipped this question",
+            });
+          }
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      skippedQuestionSubscription.unsubscribe();
+    };
+  }, [id, isProfessor, currentQuestion, toast]);
+
+  useEffect(() => {
+    const subscription = supabase
+      .channel('quiz-state')
+      .on('broadcast', { event: 'question_skipped' }, ({ payload }) => {
+        if (payload.questionIndex === currentQuestion) {
+          setIsQuestionSkipped(true);
+          setTimeLeft(0);
+          setShowFeedback(true);
+          // Reset skip state after moving to next question
+          setTimeout(() => {
+            setIsQuestionSkipped(false);
+          }, 3000);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [currentQuestion]);
 
   if (isLoading) {
     return (
@@ -660,7 +867,7 @@ export function ActiveQuiz() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl font-bold">
                     Quiz in Progress: {quiz.title}
-                  </CardTitle>
+                </CardTitle>
                   <Badge className="bg-white/20 text-white border-none">Professor Control Panel</Badge>
                 </div>
               </CardHeader>
@@ -701,6 +908,16 @@ export function ActiveQuiz() {
                       indicatorClassName="bg-green-500" 
                     />
                   </div>
+                  
+                  {/* Display status message when question is skipped */}
+                  {isQuestionSkipped && !showQuestionResults && (
+                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                      <div className="flex items-center text-yellow-700">
+                        <AlertCircle className="h-5 w-5 mr-2" />
+                        <p>This question has been skipped. View the results to see current responses.</p>
+                      </div>
+                    </div>
+                  )}
                   
                   {showQuestionResults ? (
                     <div className="bg-white rounded-lg p-4 border border-gray-200 mt-6">
@@ -799,18 +1016,28 @@ export function ActiveQuiz() {
                   ) : null}
                 </div>
               </CardContent>
-              <CardFooter className="border-t bg-gray-50 flex justify-center p-4">
+              <CardFooter className="border-t bg-gray-50 flex justify-center gap-4 p-4">
                 {!showQuestionResults ? (
-                  <Button 
-                    onClick={() => {
-                      setShowQuestionResults(true);
-                      fetchQuestionResults();
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-700 mr-4"
-                  >
-                    Show Question Results
-                    <PieChart className="ml-2 h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handleSkipQuestion}
+                      variant="outline"
+                      className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                    >
+                      Skip Question
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setShowQuestionResults(true);
+                        fetchQuestionResults();
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Show Question Results
+                      <PieChart className="ml-2 h-4 w-4" />
+                    </Button>
+                  </>
                 ) : (
                   <Button 
                     onClick={() => setShowQuestionResults(false)}
@@ -854,11 +1081,11 @@ export function ActiveQuiz() {
 
   // Quiz completed view
   if (isCompleted) {
-    return (
+  return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
         <Navigation />
-        <main className="flex-grow py-8">
-          <div className="container mx-auto px-4">
+      <main className="flex-grow py-8">
+        <div className="container mx-auto px-4">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -924,190 +1151,206 @@ export function ActiveQuiz() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -50, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="max-w-3xl mx-auto"
+              className="max-w-3xl mx-auto relative"
             >
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <div>
-                      <Badge className="bg-indigo-100 text-indigo-700 mb-2">
-                        Question {currentQuestion + 1} of {quiz.questions.length}
-                      </Badge>
-                      <CardTitle className="text-xl font-bold">{quiz.title}</CardTitle>
-                    </div>
-                    <div className={cn(
-                      "flex items-center gap-1 rounded-full px-3 py-1 text-white font-medium",
-                      timeLeft < question.time_limit * 0.25 ? "bg-red-500" : "bg-indigo-600"
-                    )}>
-                      <Clock className={cn(
-                        "h-4 w-4",
-                        timeLeft < question.time_limit * 0.25 && "animate-pulse"
-                      )} />
-                      <span>{formatTime(timeLeft)}</span>
-                    </div>
-                  </div>
-                  
-                  <Progress 
-                    value={(timeLeft / question.time_limit) * 100} 
-                    className="h-2 mb-2" 
-                    indicatorClassName={cn(
-                      timeLeft < question.time_limit * 0.25 ? "bg-red-500" : "bg-indigo-500"
-                    )}
-                  />
-                  
-                  <div className="w-full bg-gray-100 h-1.5 rounded-full">
-                    <div 
-                      className="bg-green-500 h-1.5 rounded-full" 
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pt-4">
-                  {/* Feedback overlay when showing answer feedback */}
-                  {showFeedback && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="bg-white/95 rounded-lg absolute inset-0 z-10 flex items-center justify-center"
-                    >
-                      <div className="text-center p-6">
-                        {isCorrect ? (
+              {showResults ? (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                    <CardTitle className="text-xl">Question Results</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-6">
+                      <div className="bg-indigo-50 p-4 rounded-lg">
+                        <h3 className="font-semibold mb-2">{question.question_text}</h3>
+                        {questionStats && (
                           <>
-                            <motion.div
-                              initial={{ scale: 0.5 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-                            </motion.div>
-                            <h3 className="text-2xl font-bold text-green-600 mb-2">Correct!</h3>
-                            <p className="text-gray-600 mb-1">You earned <span className="font-bold">{earnedPoints}</span> points</p>
-                            <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
-                              <Lightbulb className="h-4 w-4" />
-                              <span>Moving to next question...</span>
+                            <div className="mb-4">
+                              <p className="text-sm text-gray-600">
+                                {questionStats.totalAnswers} students answered
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {questionStats.correctCount} got it right
+                              </p>
                             </div>
-                          </>
-                        ) : (
-                          <>
-                            <motion.div
-                              initial={{ scale: 0.5 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <AlertCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
-                            </motion.div>
-                            <h3 className="text-2xl font-bold text-red-600 mb-2">Incorrect</h3>
-                            <p className="text-gray-600 mb-1">
-                              Correct answer: <span className="font-bold">{question.correct_answer}</span>
-                            </p>
-                            <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
-                              <Lightbulb className="h-4 w-4" />
-                              <span>Moving to next question...</span>
+                            <div className="space-y-3">
+                              {question.options.map((option) => {
+                                const count = questionStats.answerDistribution[option] || 0;
+                                const percentage = Math.round((count / questionStats.totalAnswers) * 100) || 0;
+                                const isCorrect = option === question.correct_answer;
+                                const isSelected = option === selectedAnswer;
+                                
+                                return (
+                                  <div key={option} className="space-y-1">
+                                    <div className="flex justify-between items-center">
+                                      <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                          "font-medium",
+                                          isCorrect && "text-green-600",
+                                          isSelected && !isCorrect && "text-red-600"
+                                        )}>
+                                          {option}
+                                          {isCorrect && <CheckCircle className="inline ml-2 h-4 w-4 text-green-500" />}
+                                          {isSelected && !isCorrect && <XCircle className="inline ml-2 h-4 w-4 text-red-500" />}
+                                        </span>
+                                      </div>
+                                      <span className="text-sm text-gray-600">{percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2">
+                                      <div 
+                                        className={cn(
+                                          "h-2 rounded-full",
+                                          isCorrect ? "bg-green-500" : "bg-blue-400"
+                                        )}
+                                        style={{ width: `${percentage}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </>
                         )}
                       </div>
-                    </motion.div>
-                  )}
-                
-                  <div className="space-y-6">
-                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">{question.question_text}</h3>
-                      <div className="flex items-center gap-2 text-sm text-indigo-600">
-                        <HelpCircle className="h-4 w-4" />
-                        <span>{question.question_type === 'multiple_choice' ? 'Choose one answer' : 'True or False'}</span>
+                      
+                      {isCorrect ? (
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                            <p className="font-medium text-green-700">
+                              You got it right! +{earnedPoints} points
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-5 w-5 text-red-500" />
+                            <p className="font-medium text-red-700">
+                              Not quite right. The correct answer was: {question.correct_answer}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t bg-gray-50 p-4">
+                    <div className="w-full flex justify-center">
+                      <Badge variant="outline" className="bg-indigo-50 text-indigo-700">
+                        Waiting for professor to continue...
+                      </Badge>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ) : (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-center mb-1">
+                      <div>
+                        <Badge className="bg-indigo-100 text-indigo-700 mb-2">
+                          Question {currentQuestion + 1} of {quiz.questions.length}
+                        </Badge>
+                        <CardTitle className="text-xl font-bold">{quiz.title}</CardTitle>
+                      </div>
+                      <div className={cn(
+                        "flex items-center gap-1 rounded-full px-3 py-1 text-white font-medium",
+                        timeLeft < question.time_limit * 0.25 ? "bg-red-500" : "bg-indigo-600"
+                      )}>
+                        <Clock className={cn(
+                          "h-4 w-4",
+                          timeLeft < question.time_limit * 0.25 && "animate-pulse"
+                        )} />
+                        <span>{formatTime(timeLeft)}</span>
                       </div>
                     </div>
                     
+                    <Progress 
+                      value={(timeLeft / question.time_limit) * 100} 
+                      className="h-2 mb-2" 
+                      indicatorClassName={cn(
+                        timeLeft < question.time_limit * 0.25 ? "bg-red-500" : "bg-indigo-500"
+                      )}
+                    />
+                    
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full">
+                      <div 
+                        className="bg-green-500 h-1.5 rounded-full" 
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="pt-4">
+                    <div className="space-y-6">
+                      <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{question.question_text}</h3>
+                        <div className="flex items-center gap-2 text-sm text-indigo-600">
+                          <HelpCircle className="h-4 w-4" />
+                          <span>{question.question_type === 'multiple_choice' ? 'Choose one answer' : 'True or False'}</span>
+                        </div>
+                      </div>
+                    
                     {question.question_type === 'multiple_choice' && (
-                      <RadioGroup 
-                        value={selectedAnswer || ''} 
-                        className="space-y-3"
-                        onValueChange={handleSelectAnswer}
-                        disabled={isSubmitting || showFeedback}
-                      >
+                      <div className="space-y-3">
                         {question.options.map((option, i) => (
-                          <Label
+                          <div
                             key={i}
-                            htmlFor={`option-${i}`}
+                            onClick={() => !isSubmitting && !hasAnswered && handleSelectAnswer(option)}
                             className={cn(
                               "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all select-none",
                               selectedAnswer === option 
                                 ? "bg-indigo-50 border-indigo-300 text-indigo-900" 
                                 : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50",
-                              (isSubmitting || showFeedback) && "opacity-70 cursor-not-allowed"
+                              (isSubmitting || hasAnswered) && "opacity-70 cursor-not-allowed"
                             )}
                           >
                             <div className="flex items-center gap-3">
-                              <RadioGroupItem 
-                                value={option} 
-                                id={`option-${i}`}
-                                disabled={isSubmitting || showFeedback}
+                              <input
+                                type="radio"
+                                checked={selectedAnswer === option}
+                                onChange={() => {}}
+                                disabled={isSubmitting || hasAnswered}
+                                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                               />
                               <span>{option}</span>
                             </div>
                             {selectedAnswer === option && (
                               <ChevronRight className="h-5 w-5 text-indigo-600" />
                             )}
-                          </Label>
+                          </div>
                         ))}
-                      </RadioGroup>
+                      </div>
                     )}
-                    
+                  
                     {question.question_type === 'true_false' && (
-                      <RadioGroup 
-                        value={selectedAnswer || ''} 
-                        className="space-y-3"
-                        onValueChange={handleSelectAnswer}
-                        disabled={isSubmitting || showFeedback}
-                      >
-                        <Label
-                          htmlFor="true-option"
-                          className={cn(
-                            "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
-                            selectedAnswer === 'True' 
-                              ? "bg-indigo-50 border-indigo-300 text-indigo-900" 
-                              : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50",
-                            (isSubmitting || showFeedback) && "opacity-70 cursor-not-allowed"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem 
-                              value="True" 
-                              id="true-option"
-                              disabled={isSubmitting || showFeedback}
-                            />
-                            <span>True</span>
+                      <div className="space-y-3">
+                        {['True', 'False'].map((option) => (
+                          <div
+                            key={option}
+                            onClick={() => !isSubmitting && !hasAnswered && handleSelectAnswer(option)}
+                            className={cn(
+                              "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all select-none",
+                              selectedAnswer === option 
+                                ? "bg-indigo-50 border-indigo-300 text-indigo-900" 
+                                : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50",
+                              (isSubmitting || hasAnswered) && "opacity-70 cursor-not-allowed"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="radio"
+                                checked={selectedAnswer === option}
+                                onChange={() => {}}
+                                disabled={isSubmitting || hasAnswered}
+                                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                              />
+                              <span>{option}</span>
+                            </div>
+                            {selectedAnswer === option && (
+                              <ChevronRight className="h-5 w-5 text-indigo-600" />
+                            )}
                           </div>
-                          {selectedAnswer === 'True' && (
-                            <ChevronRight className="h-5 w-5 text-indigo-600" />
-                          )}
-                        </Label>
-                        
-                        <Label
-                          htmlFor="false-option"
-                          className={cn(
-                            "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
-                            selectedAnswer === 'False' 
-                              ? "bg-indigo-50 border-indigo-300 text-indigo-900" 
-                              : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50",
-                            (isSubmitting || showFeedback) && "opacity-70 cursor-not-allowed"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem 
-                              value="False" 
-                              id="false-option"
-                              disabled={isSubmitting || showFeedback}
-                            />
-                            <span>False</span>
-                          </div>
-                          {selectedAnswer === 'False' && (
-                            <ChevronRight className="h-5 w-5 text-indigo-600" />
-                          )}
-                        </Label>
-                      </RadioGroup>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -1119,30 +1362,40 @@ export function ActiveQuiz() {
                       <span className="ml-1">× {question.point_multiplier} multiplier</span>
                     )}
                   </div>
-                  <Button 
-                    className={cn(
-                      "transition-all",
-                      selectedAnswer ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-300"
-                    )}
-                    disabled={!selectedAnswer || isSubmitting || showFeedback}
-                    onClick={handleSubmitAnswer}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        Submit
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+                  {hasAnswered ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+                      <span className="text-sm text-indigo-600">
+                        Waiting for others... ({currentAnswersCount}/{totalParticipantsCount})
+                      </span>
+                    </div>
+                  ) : (
+                    <Button 
+                      className={cn(
+                        "transition-all",
+                        selectedAnswer ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-300"
+                      )}
+                      disabled={!selectedAnswer || isSubmitting}
+                      onClick={handleSubmitAnswer}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          Submit
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
-            </motion.div>
-          </AnimatePresence>
+            )}
+          </motion.div>
+        </AnimatePresence>
         </div>
       </main>
       <Footer />
