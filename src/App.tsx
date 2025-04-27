@@ -7,8 +7,6 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthProvider } from "@/lib/auth/auth-context";
 
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ConfirmEmail from "./pages/auth/ConfirmEmail";
 import Dashboard from "./pages/Dashboard";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -25,6 +23,7 @@ import { QuizWaitingRoom } from './components/quiz/QuizWaitingRoom';
 import { ActiveQuiz } from './components/quiz/ActiveQuiz';
 import ForumNew from './pages/ForumNew';
 import ForumQuestionDetail from './pages/ForumQuestionDetail';
+import DashboardAdmin from './pages/DashboardAdmin';
 
 const queryClient = new QueryClient();
 
@@ -39,22 +38,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             
             {/* Auth Routes */}
-            <Route
-              path="/login"
-              element={
-                <ProtectedRoute requireUnauth>
-                  <Login />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <ProtectedRoute requireUnauth>
-                  <Register />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/confirm-email"
               element={
@@ -178,6 +161,16 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <QuizResults />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Routes */}
+            <Route
+              path="/dashboard_admin"
+              element={
+                <ProtectedRoute requireAuth>
+                  <DashboardAdmin />
                 </ProtectedRoute>
               }
             />
