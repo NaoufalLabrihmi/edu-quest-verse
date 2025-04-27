@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { GraduationCap, MessageCircle, ShoppingBag } from 'lucide-react';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuth } from '@/lib/auth/auth-context';
 
 const Index = () => {
   const [enteredCode, setEnteredCode] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   
   const handleJoinQuiz = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuth } from '@/lib/auth/auth-context';
 
 const ConfirmEmail = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     // If user is already confirmed, redirect to dashboard

@@ -18,14 +18,14 @@ import {
 import { Input } from './ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { GraduationCap, Settings, User, Plus, Key, Menu, X } from 'lucide-react';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuth } from '@/lib/auth/auth-context';
 import { toast } from 'react-hot-toast';
 import { JoinQuizDialog } from '@/components/quiz/JoinQuizDialog';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isJoinQuizOpen, setIsJoinQuizOpen] = useState(false);
-  const { user, profile, signOut, initialized, checkAuth } = useAuthStore();
+  const { user, profile, signOut, initialized, checkAuth } = useAuth();
   const navigate = useNavigate();
   const isProfessor = profile?.role === 'teacher' || profile?.role === 'admin';
 

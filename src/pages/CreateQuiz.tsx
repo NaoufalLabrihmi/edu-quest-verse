@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/lib/auth/auth-context';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Check, Plus, Trash2, Edit2, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as baseSupabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth/auth-context';
+const supabase: any = baseSupabase;
 
 // Question types as in DB
 const QUESTION_TYPES = [
@@ -48,24 +49,25 @@ const defaultQuestion = (): Question => ({
   text: '',
   options: ['', '', '', ''],
   correctOption: 0,
-  points: 1,
+  answer: '',
+  points: 5,
   timeLimit: 30,
   pointMultiplier: 1,
 });
 
 const CreateQuiz = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [quizTitle, setQuizTitle] = useState('');
-  const [quizDescription, setQuizDescription] = useState('');
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<Question>(defaultQuestion());
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [accessCode, setAccessCode] = useState(
     Math.random().toString(36).substring(2, 8).toUpperCase()
   );
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<Question>(defaultQuestion());
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // --- UI helpers ---
   const handleCopyCode = () => {
@@ -90,11 +92,11 @@ const CreateQuiz = () => {
     if (currentQuestion.type === 'true_false') {
       questionToSave.answer = currentQuestion.answer === true ? true : false;
     }
-    if (editingQuestionIndex !== null) {
+    if (editingIndex !== null) {
       setQuestions((prev) =>
-        prev.map((q, i) => (i === editingQuestionIndex ? { ...questionToSave } : q))
+        prev.map((q, i) => (i === editingIndex ? { ...questionToSave } : q))
       );
-      setEditingQuestionIndex(null);
+      setEditingIndex(null);
     } else {
       setQuestions([...questions, { ...questionToSave }]);
     }
@@ -103,12 +105,12 @@ const CreateQuiz = () => {
 
   const handleEditQuestion = (index: number) => {
     setCurrentQuestion({ ...questions[index] });
-    setEditingQuestionIndex(index);
+    setEditingIndex(index);
   };
 
   const handleRemoveQuestion = (id: string) => {
     setQuestions(questions.filter((q) => q.id !== id));
-    if (editingQuestionIndex !== null) setEditingQuestionIndex(null);
+    if (editingIndex !== null) setEditingIndex(null);
     setCurrentQuestion(defaultQuestion());
   };
 
@@ -134,76 +136,89 @@ const CreateQuiz = () => {
 
   // --- Save Quiz ---
   const handleSaveQuiz = async () => {
-    if (!quizTitle.trim() || questions.length === 0) {
+    if (!title.trim() || questions.length === 0) {
       toast({
         title: 'Unable to save quiz',
-        description: 'Please provide a title and at least one question',
+        description: 'Please fill in all required fields and add at least one question.',
         variant: 'destructive',
       });
       return;
     }
-
+    if (!user) {
+      toast({ title: 'You must be logged in to create a quiz', variant: 'destructive' });
+      return;
+    }
+    // Defensive: check all questions for valid points, timeLimit, pointMultiplier
+    for (const q of questions) {
+      if (
+        typeof q.points !== 'number' || q.points < 1 || q.points > 10 ||
+        typeof q.timeLimit !== 'number' || q.timeLimit < 1 || q.timeLimit > 120 ||
+        typeof q.pointMultiplier !== 'number' || ![1, 2].includes(q.pointMultiplier)
+      ) {
+        toast({
+          title: 'Invalid question values',
+          description: 'Check points, time limit, and point multiplier for all questions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     setIsSaving(true);
-
     try {
-      // First, create the quiz
-      const { data: quizData, error: quizError } = await supabase
+      // 1. Create quiz
+      const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
-        .insert({
-          title: quizTitle,
-          description: quizDescription,
-          access_code: accessCode,
-          status: 'draft',
-          created_by: user?.id,
-        })
+        .insert([
+          {
+            title,
+            description,
+            access_code: accessCode,
+            status: 'draft',
+            created_by: user.id,
+          },
+        ])
         .select()
         .single();
-
-      if (quizError) throw quizError;
-
-      // Then, create the questions
-      const questionData = questions.map((q, index) => ({
-        quiz_id: quizData.id,
+      if (quizError || !quiz) throw quizError || new Error('Quiz not created');
+      // 2. Create questions
+      const questionInserts = questions.map((q, idx) => ({
+        quiz_id: quiz.id,
         question_text: q.text,
         question_type: q.type,
-        correct_answer: q.type === 'multiple_choice' 
-          ? q.options?.[q.correctOption || 0] 
-          : q.type === 'true_false' 
-            ? q.answer?.toString() 
-            : q.answer as string,
-        options: q.options || [],
+        correct_answer:
+          q.type === 'multiple_choice'
+            ? (q.options && q.options[q.correctOption || 0]) || ''
+            : q.type === 'true_false'
+            ? q.answer === true ? 'true' : 'false'
+            : String(q.answer),
+        options: q.type === 'multiple_choice' ? q.options : null,
         points: q.points,
         time_limit: q.timeLimit,
         point_multiplier: q.pointMultiplier,
-        order_number: index + 1,
+        order_number: idx + 1,
       }));
-
       const { error: questionsError } = await supabase
         .from('questions')
-        .insert(questionData);
-
+        .insert(questionInserts);
       if (questionsError) throw questionsError;
-
       toast({
         title: 'Quiz created!',
-        description: `Your quiz "${quizTitle}" has been created.`,
+        description: `Your quiz "${title}" has been created.`,
       });
-
       // Reset form
-      setQuizTitle('');
-      setQuizDescription('');
+      setTitle('');
+      setDescription('');
       setAccessCode(Math.random().toString(36).substring(2, 8).toUpperCase());
-      setQuestions([defaultQuestion()]);
+      setQuestions([]);
       setCurrentQuestion(defaultQuestion());
-      setEditingQuestionIndex(null);
+      setEditingIndex(null);
       
       // Navigate to dashboard after successful creation
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error saving quiz:', error);
+    } catch (err: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to save quiz. Please try again.',
+        title: 'Error creating quiz',
+        description: err.message || (err?.details ?? 'Something went wrong'),
         variant: 'destructive',
       });
     } finally {
@@ -228,8 +243,8 @@ const CreateQuiz = () => {
                 <Label htmlFor="title">Quiz Title*</Label>
                 <Input
                   id="title"
-                  value={quizTitle}
-                  onChange={(e) => setQuizTitle(e.target.value)}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Algebra Fundamentals"
                   className="mt-1 bg-gray-900 border-gray-700 text-white"
                   required
@@ -268,8 +283,8 @@ const CreateQuiz = () => {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={quizDescription}
-                  onChange={(e) => setQuizDescription(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Provide a brief description of your quiz"
                   className="mt-1 resize-none bg-gray-900 border-gray-700 text-white"
                   rows={3}
@@ -355,7 +370,7 @@ const CreateQuiz = () => {
               </div>
             )}
             <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-semibold mb-3 text-pink-200">{editingQuestionIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-pink-200">{editingIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
               <Tabs value={currentQuestion.type} onValueChange={(v) => handleQuestionTypeChange(v as QuestionType)}>
                 <TabsList className="mb-4 bg-gray-800 border border-gray-700 rounded-lg">
                   {QUESTION_TYPES.map((qt) => (
@@ -496,16 +511,16 @@ const CreateQuiz = () => {
                     onClick={handleAddOrEditQuestion}
                     className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
                   >
-                    {editingQuestionIndex !== null ? 'Update Question' : 'Add This Question'}
+                    {editingIndex !== null ? 'Update Question' : 'Add This Question'}
                   </Button>
-                  {editingQuestionIndex !== null && (
+                  {editingIndex !== null && (
                     <Button
                       type="button"
                       variant="outline"
                       className="w-full md:w-auto border-gray-700 text-gray-300 hover:bg-gray-800"
                       onClick={() => {
                         setCurrentQuestion(defaultQuestion());
-                        setEditingQuestionIndex(null);
+                        setEditingIndex(null);
                       }}
                     >
                       Cancel Edit
@@ -519,7 +534,7 @@ const CreateQuiz = () => {
             <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">Cancel</Button>
             <Button
               onClick={handleSaveQuiz}
-              disabled={isSaving || !quizTitle || questions.length === 0}
+              disabled={isSaving || !title || questions.length === 0}
               className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
             >
               {isSaving ? 'Saving...' : 'Save Quiz'}

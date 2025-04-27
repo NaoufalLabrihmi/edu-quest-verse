@@ -23,6 +23,8 @@ import QuizResults from './pages/QuizResults';
 import EditQuiz from './pages/EditQuiz';
 import { QuizWaitingRoom } from './components/quiz/QuizWaitingRoom';
 import { ActiveQuiz } from './components/quiz/ActiveQuiz';
+import ForumNew from './pages/ForumNew';
+import ForumQuestionDetail from './pages/ForumQuestionDetail';
 
 const queryClient = new QueryClient();
 
@@ -120,6 +122,22 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <ForumPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/forum/new"
+              element={
+                <ProtectedRoute requireAuth>
+                  <ForumNew />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/forum/:id"
+              element={
+                <ProtectedRoute requireAuth>
+                  <ForumQuestionDetail />
                 </ProtectedRoute>
               }
             />

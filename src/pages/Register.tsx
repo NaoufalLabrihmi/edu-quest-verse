@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/components/ui/use-toast';
 import { GraduationCap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuth } from '@/lib/auth/auth-context';
 import type { User } from '@supabase/supabase-js';
 
 const Register = () => {
@@ -20,7 +20,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, setUser, setProfile } = useAuthStore();
+  const { user, setProfile, checkAuth } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -73,7 +73,7 @@ const Register = () => {
       }
 
       // Set the user in state
-      setUser(authData.user);
+      await checkAuth();
       
       toast({
         title: "Account created!",

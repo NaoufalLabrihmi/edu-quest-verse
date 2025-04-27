@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useToast } from '@/components/ui/use-toast';
 
 interface ProtectedRouteProps {
@@ -19,8 +18,7 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user: authUser, loading } = useAuth();
-  const { profile, checkAuth, initialized } = useAuthStore();
+  const { user: authUser, profile, checkAuth, initialized, loading } = useAuth();
   const isProfessor = profile?.role === 'teacher' || profile?.role === 'admin';
 
   useEffect(() => {
