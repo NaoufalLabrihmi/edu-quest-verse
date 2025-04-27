@@ -136,4 +136,20 @@ export async function markPostSolved(postId: string, solved: boolean) {
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function deletePost(postId: string) {
+  const { error } = await supabase
+    .from<any, any>('forum_posts')
+    .delete()
+    .eq('id', postId);
+  if (error) throw error;
+}
+
+export async function updatePost({ id, title, content, categoryId, solved }: { id: string, title: string, content: string, categoryId: string, solved: boolean }) {
+  const { error } = await supabase
+    .from<any, any>('forum_posts')
+    .update({ title, content, category_id: categoryId, solved })
+    .eq('id', id);
+  if (error) throw error;
 } 

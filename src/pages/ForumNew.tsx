@@ -11,7 +11,11 @@ import { Loader2, CheckCircle } from 'lucide-react';
 import { getCategories, addPost } from '@/lib/forum/forum-api';
 import { useAuth } from '@/lib/auth/auth-context';
 
-const ForumNew = () => {
+interface ForumNewProps {
+  onSuccess?: () => void;
+}
+
+const ForumNew = ({ onSuccess }: ForumNewProps) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
@@ -61,6 +65,7 @@ const ForumNew = () => {
         authorId: user.id,
       });
       setSuccess(true);
+      if (onSuccess) onSuccess();
       setTimeout(() => navigate('/forum'), 1200);
     } catch (err) {
       setError('Failed to post your question. Please try again.');
@@ -93,13 +98,13 @@ const ForumNew = () => {
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 font-medium" htmlFor="content">Details</label>
+                  <label className="block mb-1 font-medium" htmlFor="content">Description</label>
                   <Textarea
                     id="content"
                     value={content}
                     onChange={e => setContent(e.target.value)}
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[120px]"
-                    placeholder="Describe your question in detail..."
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                    placeholder="Describe your question..."
                     required
                   />
                 </div>

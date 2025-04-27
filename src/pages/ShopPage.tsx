@@ -1,15 +1,17 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { ShoppingBag } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ShoppingBag, Gift, User } from 'lucide-react';
+import { useAuth } from '@/lib/auth/auth-context';
 
-// Sample shop items data
+// Modern shop items data (could be fetched from DB in real app)
 const shopItems = {
   supplies: [
     {
@@ -83,182 +85,199 @@ const shopItems = {
   ]
 };
 
+type ShopCategory = keyof typeof shopItems;
+
 const ShopPage = () => {
-  // Sample user data - in a real app, this would come from your auth system
-  const user = {
-    name: 'Alex Johnson',
-    role: 'student',
-    points: 145,
-  };
-  
+  const { profile, loading } = useAuth();
   const { toast } = useToast();
-  
-  const handlePurchase = (item: any) => {
-    if (user.points < item.points) {
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<ShopCategory>('supplies');
+
+  // Debug print for troubleshooting
+  console.log('Loaded profile:', profile);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
+        <Navigation />
+        <main className="flex-grow flex items-center justify-center">
+          <span className="text-lg font-semibold animate-pulse">Loading...</span>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!profile || profile.role !== 'student') {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
+        <Navigation />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="bg-purple-900/80 border border-purple-700 rounded-2xl shadow-2xl p-10 text-center max-w-md mx-auto">
+            <Gift className="mx-auto mb-4 h-10 w-10 text-purple-300" />
+            <h2 className="text-2xl font-bold mb-4 text-purple-200">Shop Access Restricted</h2>
+            <p className="text-white/80 text-base mb-2">Only students can access the rewards shop.</p>
+            <p className="text-white/60 text-sm">If you are a student, please log in with your student account.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const handlePurchase = async (item: any) => {
+    if (profile.points < item.points) {
       toast({
-        title: "Not enough points",
-        description: `You need ${item.points - user.points} more points to purchase this item.`,
-        variant: "destructive",
+        title: 'Not enough points',
+        description: `You need ${item.points - profile.points} more points to purchase this item.`,
+        variant: 'destructive',
       });
       return;
     }
-    
-    // In a real app, this would update the database
-    toast({
-      title: "Purchase successful!",
-      description: `You have purchased ${item.name} for ${item.points} points.`,
-    });
+    setPurchaseLoading(true);
+    // Simulate purchase (replace with real DB update in production)
+    setTimeout(() => {
+      setPurchaseLoading(false);
+      toast({
+        title: 'Purchase successful!',
+        description: `You have purchased ${item.name} for ${item.points} points.`,
+      });
+      setSelectedItem(null);
+    }, 1200);
   };
-  
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navigation isLoggedIn={true} userRole="student" userName={user.name} userPoints={user.points} />
-      
-      <main className="flex-grow bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Rewards Shop</h1>
-              <p className="text-gray-600">Redeem your hard-earned points for exciting rewards!</p>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
+      <Navigation />
+      <main className="flex-grow py-8">
+        <div className="container mx-auto px-2 max-w-6xl">
+          {/* Header: Shop Title (left) and User Profile (right) */}
+          <div className="flex flex-row items-center justify-between mb-10 gap-4">
+            {/* Left: Shop Title and Subtitle */}
+            <div className="flex-1 flex flex-col items-start justify-center">
+              <h1 className="text-4xl font-extrabold mb-2 text-purple-200 drop-shadow">Rewards Shop</h1>
+              <p className="text-white/80 text-lg">Redeem your points for exclusive rewards!</p>
             </div>
-            
-            <div className="bg-gradient-to-r from-edu-purple-500 to-edu-blue-600 rounded-lg px-6 py-3 text-white shadow-md">
-              <p className="text-sm font-medium">Your Balance</p>
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold">{user.points}</span>
-                <span className="ml-1">points</span>
+            {/* Right: User Profile */}
+            <div className="flex items-center gap-4 bg-gray-900 rounded-2xl px-6 py-4 shadow-lg border border-gray-800">
+              <Avatar className="h-16 w-16 border-4 border-purple-300 bg-gray-950">
+                <User className="h-10 w-10 text-purple-200" />
+                <AvatarFallback>{profile.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-end">
+                <div className="text-lg font-semibold text-purple-100">{profile.username}</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-white drop-shadow">{profile.points}</span>
+                  <span className="text-purple-200 font-medium">points</span>
+                </div>
               </div>
             </div>
           </div>
-          
-          <Tabs defaultValue="supplies" className="mb-8">
-            <TabsList className="mb-6">
+
+          {/* Shop Tabs */}
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={v => setActiveTab(v as ShopCategory)} className="mb-10">
+            <TabsList className="mb-8 bg-gray-800 border border-gray-700 rounded-xl">
               <TabsTrigger value="supplies">School Supplies</TabsTrigger>
               <TabsTrigger value="courses">Courses</TabsTrigger>
               <TabsTrigger value="digital">Digital Rewards</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="supplies">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {shopItems.supplies.map((item) => (
-                  <ShopItemCard key={item.id} item={item} onPurchase={handlePurchase} userPoints={user.points} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="courses">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {shopItems.courses.map((item) => (
-                  <ShopItemCard key={item.id} item={item} onPurchase={handlePurchase} userPoints={user.points} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="digital">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {shopItems.digital.map((item) => (
-                  <ShopItemCard key={item.id} item={item} onPurchase={handlePurchase} userPoints={user.points} />
-                ))}
-              </div>
-            </TabsContent>
+            {(['supplies', 'courses', 'digital'] as ShopCategory[]).map(category => (
+              <TabsContent key={category} value={category}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 justify-center">
+                  {shopItems[category].map(item => (
+                    <Card key={item.id} className="relative group overflow-hidden shadow-xl hover:shadow-2xl transition-all border border-gray-800 rounded-2xl w-[350px] h-[420px] mx-auto bg-gray-900 hover:scale-[1.025] flex flex-col">
+                      <div className="h-44 bg-gray-950 flex items-center justify-center">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <ShoppingBag className="h-14 w-14 text-purple-400" />
+                        )}
+                      </div>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg font-bold text-purple-200 leading-tight">{item.name}</CardTitle>
+                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-base px-3 py-1">{item.points} pts</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pb-4 flex-1">
+                        <p className="text-gray-300 text-sm mb-2 min-h-[40px] leading-snug">{item.description}</p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Stock: {typeof item.stock === 'number' ? `${item.stock} left` : item.stock}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t bg-gray-950 pt-4">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              className="w-full text-base"
+                              variant={profile.points >= item.points ? 'default' : 'outline'}
+                              disabled={profile.points < item.points}
+                              onClick={() => setSelectedItem(item)}
+                            >
+                              {profile.points >= item.points ? 'Redeem' : `Need ${item.points - profile.points} more points`}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-gray-900 border border-gray-800">
+                            <DialogHeader>
+                              <DialogTitle>Confirm Purchase</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex flex-col items-center gap-4 py-4">
+                              <ShoppingBag className="h-10 w-10 text-purple-400" />
+                              <div className="text-lg font-semibold">{item.name}</div>
+                              <div className="text-purple-600 text-sm mb-2">{item.description}</div>
+                              <div className="text-purple-700 font-bold">Cost: {item.points} points</div>
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                onClick={() => setSelectedItem(null)}
+                                disabled={purchaseLoading}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => handlePurchase(item)}
+                                disabled={purchaseLoading}
+                                className="bg-purple-700 hover:bg-purple-800"
+                              >
+                                {purchaseLoading ? 'Processing...' : 'Confirm'}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            ))}
           </Tabs>
-          
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">How to Earn More Points</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 bg-edu-purple-50 rounded-lg">
-                <h3 className="font-semibold text-edu-purple-700 mb-2">
-                  Participate in Quizzes
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Join quizzes and score well to earn points. Top performers get bonus points!
-                </p>
+
+          {/* How to Earn More Points */}
+          <div className="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 mt-12">
+            <h2 className="text-2xl font-semibold mb-6 text-purple-200 flex items-center gap-2">
+              <Gift className="h-6 w-6 text-purple-300" /> How to Earn More Points
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="p-6 bg-gray-950 rounded-lg">
+                <h3 className="font-semibold text-purple-200 mb-2">Participate in Quizzes</h3>
+                <p className="text-white/80 text-sm">Join quizzes and score well to earn points. Top performers get bonus points!</p>
               </div>
-              
-              <div className="p-4 bg-edu-blue-50 rounded-lg">
-                <h3 className="font-semibold text-edu-blue-700 mb-2">
-                  Help Others in the Forum
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Answer questions in the forum. Get points when your answers are marked helpful.
-                </p>
+              <div className="p-6 bg-gray-950 rounded-lg">
+                <h3 className="font-semibold text-purple-200 mb-2">Help Others in the Forum</h3>
+                <p className="text-white/80 text-sm">Answer questions in the forum. Get points when your answers are marked helpful.</p>
               </div>
-              
-              <div className="p-4 bg-edu-orange-50 rounded-lg">
-                <h3 className="font-semibold text-edu-orange-700 mb-2">
-                  Daily Login Streaks
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Login daily to maintain your streak. Longer streaks mean more bonus points!
-                </p>
+              <div className="p-6 bg-gray-950 rounded-lg">
+                <h3 className="font-semibold text-purple-200 mb-2">Daily Login Streaks</h3>
+                <p className="text-white/80 text-sm">Login daily to maintain your streak. Longer streaks mean more bonus points!</p>
               </div>
             </div>
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
-  );
-};
-
-interface ShopItemCardProps {
-  item: {
-    id: number;
-    name: string;
-    description: string;
-    points: number;
-    image: string;
-    stock: number | string;
-  };
-  onPurchase: (item: any) => void;
-  userPoints: number;
-}
-
-const ShopItemCard = ({ item, onPurchase, userPoints }: ShopItemCardProps) => {
-  const canAfford = userPoints >= item.points;
-  
-  return (
-    <Card className={`overflow-hidden transition-all hover:shadow-md ${!canAfford ? 'opacity-75' : ''}`}>
-      <div className="h-48 bg-gray-100 flex items-center justify-center">
-        {item.image ? (
-          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-        ) : (
-          <ShoppingBag className="h-12 w-12 text-gray-400" />
-        )}
-      </div>
-      
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{item.name}</CardTitle>
-          <Badge className="bg-edu-purple-100 text-edu-purple-700 border-edu-purple-200">
-            {item.points} pts
-          </Badge>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pb-4">
-        <p className="text-gray-600 text-sm">{item.description}</p>
-        
-        <div className="mt-2 text-sm">
-          <span className="text-gray-500">
-            Stock: {typeof item.stock === 'number' ? `${item.stock} left` : item.stock}
-          </span>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="border-t bg-gray-50 pt-4">
-        <Button 
-          className="w-full"
-          variant={canAfford ? "default" : "outline"}
-          onClick={() => onPurchase(item)}
-          disabled={!canAfford}
-        >
-          {canAfford ? 'Redeem' : `Need ${item.points - userPoints} more points`}
-        </Button>
-      </CardFooter>
-    </Card>
   );
 };
 

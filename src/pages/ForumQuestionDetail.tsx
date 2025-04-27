@@ -83,7 +83,17 @@ const ForumQuestionDetail = () => {
         authorId: user.id,
         content: comment,
       });
-      setPost((prev: any) => ({ ...prev, comments: [...(prev.comments || []), newComment] }));
+      // Merge in author info from current user for immediate UI update
+      const commentWithAuthor = {
+        ...newComment,
+        author: {
+          id: user.id,
+          username: user.user_metadata?.username || user.email || 'You',
+          role: user.user_metadata?.role || 'student',
+          avatar_url: user.user_metadata?.avatar_url || '',
+        },
+      };
+      setPost((prev: any) => ({ ...prev, comments: [...(prev.comments || []), commentWithAuthor] }));
       setComment('');
     } catch (err) {
       setCommentError('Failed to add comment.');
