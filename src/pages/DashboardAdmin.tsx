@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import ProductTable from '@/components/admin/ProductTable';
 
 ChartJS.register(
   CategoryScale,
@@ -449,12 +450,7 @@ const DashboardAdmin = () => {
         )}
         {active === 'products' && (
           <section>
-            <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 text-transparent bg-clip-text">
-              Manage Products
-            </h1>
-            <div className={`${glass} p-5`}>
-              <p className="text-gray-400 text-sm">(Product management table goes here.)</p>
-            </div>
+            <ProductTable />
           </section>
         )}
         {active === 'categories' && (
