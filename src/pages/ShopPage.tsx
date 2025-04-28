@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,102 +7,59 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ShoppingBag, Gift, User } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { ShoppingBag, Gift, User, Loader2, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Modern shop items data (could be fetched from DB in real app)
-const shopItems = {
-  supplies: [
-    {
-      id: 1,
-      name: 'Premium Calculator',
-      description: 'Scientific calculator with advanced functions',
-      points: 120,
-      image: '',
-      stock: 10
-    },
-    {
-      id: 2,
-      name: 'Deluxe Notebook Set',
-      description: 'Set of 3 high-quality notebooks',
-      points: 75,
-      image: '',
-      stock: 15
-    },
-    {
-      id: 3,
-      name: 'Ergonomic Pen Pack',
-      description: 'Pack of 5 comfortable grip pens',
-      points: 50,
-      image: '',
-      stock: 20
-    }
-  ],
-  courses: [
-    {
-      id: 4,
-      name: 'Advanced Math Masterclass',
-      description: 'Online course covering advanced mathematical concepts',
-      points: 300,
-      image: '',
-      stock: 5
-    },
-    {
-      id: 5,
-      name: 'Creative Writing Workshop',
-      description: 'Interactive workshop to improve your writing skills',
-      points: 250,
-      image: '',
-      stock: 8
-    }
-  ],
-  digital: [
-    {
-      id: 6,
-      name: 'Study Planner App - Premium',
-      description: '3-month premium subscription',
-      points: 150,
-      image: '',
-      stock: 'unlimited'
-    },
-    {
-      id: 7,
-      name: 'E-book Bundle',
-      description: 'Collection of 5 educational e-books',
-      points: 200,
-      image: '',
-      stock: 'unlimited'
-    },
-    {
-      id: 8,
-      name: 'Profile Badge: Brain Genius',
-      description: 'Exclusive profile badge to show off your knowledge',
-      points: 100,
-      image: '',
-      stock: 'unlimited'
-    }
-  ]
-};
-
-type ShopCategory = keyof typeof shopItems;
+import { supabase } from '@/integrations/supabase/client';
 
 const ShopPage = () => {
   const { profile, loading } = useAuth();
   const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<ShopCategory>('supplies');
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 9;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setProductsLoading(true);
+      setProductsError('');
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (error) setProductsError('Failed to load products');
+      else setProducts(data || []);
+      setProductsLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
   // Debug print for troubleshooting
   console.log('Loaded profile:', profile);
 
-  if (loading) {
+  if (loading || productsLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
         <Navigation />
         <main className="flex-grow flex items-center justify-center">
           <span className="text-lg font-semibold animate-pulse">Loading...</span>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
+        <Navigation />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="bg-purple-900/80 border border-purple-700 rounded-2xl shadow-2xl p-10 text-center max-w-md mx-auto">
+            <Gift className="mx-auto mb-4 h-10 w-10 text-purple-300" />
+            <h2 className="text-2xl font-bold mb-4 text-purple-200">Error Loading Products</h2>
+            <p className="text-white/80 text-base mb-2">{productsError}</p>
+          </div>
         </main>
         <Footer />
       </div>
@@ -127,25 +84,68 @@ const ShopPage = () => {
   }
 
   const handlePurchase = async (item: any) => {
-    if (profile.points < item.points) {
+    if (profile.points < item.points_required) {
       toast({
         title: 'Not enough points',
-        description: `You need ${item.points - profile.points} more points to purchase this item.`,
+        description: `You need ${item.points_required - profile.points} more points to purchase this item.`,
         variant: 'destructive',
       });
       return;
     }
+
     setPurchaseLoading(true);
-    // Simulate purchase (replace with real DB update in production)
-    setTimeout(() => {
+    try {
+      // Start a transaction to ensure both operations succeed or fail together
+      const { data: purchaseData, error: purchaseError } = await supabase
+        .from('purchases')
+        .insert({
+          user_id: profile.id,
+          product_id: item.id,
+          points_spent: item.points_required
+        })
+        .select()
+        .single();
+
+      if (purchaseError) throw purchaseError;
+
+      // Update user's points
+      const newPoints = profile.points - item.points_required;
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      // First close the popup
+      setSelectedItem(null);
+      setPurchaseLoading(false);
+
+      // Then update local state
+      profile.points = newPoints;
+
+      // Finally show success message
+      setTimeout(() => {
+        toast({
+          variant: "success",
+          title: "🎉 Purchase Complete!",
+          description: `Successfully purchased ${item.name} for ${item.points_required} points. Your new balance: ${newPoints} points`,
+        });
+      }, 100);
+
+    } catch (error) {
+      console.error('Purchase error:', error);
       setPurchaseLoading(false);
       toast({
-        title: 'Purchase successful!',
-        description: `You have purchased ${item.name} for ${item.points} points.`,
+        variant: "destructive",
+        title: 'Purchase Failed',
+        description: 'There was an error processing your purchase. Please try again.',
       });
-      setSelectedItem(null);
-    }, 1200);
+    }
   };
+
+  const totalPages = Math.ceil(products.length / pageSize);
+  const paginatedProducts = products.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
@@ -175,84 +175,154 @@ const ShopPage = () => {
             </div>
           </div>
 
-          {/* Shop Tabs */}
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={v => setActiveTab(v as ShopCategory)} className="mb-10">
-            <TabsList className="mb-8 bg-gray-800 border border-gray-700 rounded-xl">
-              <TabsTrigger value="supplies">School Supplies</TabsTrigger>
-              <TabsTrigger value="courses">Courses</TabsTrigger>
-              <TabsTrigger value="digital">Digital Rewards</TabsTrigger>
-            </TabsList>
-            {(['supplies', 'courses', 'digital'] as ShopCategory[]).map(category => (
-              <TabsContent key={category} value={category}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 justify-center">
-                  {shopItems[category].map(item => (
-                    <Card key={item.id} className="relative group overflow-hidden shadow-xl hover:shadow-2xl transition-all border border-gray-800 rounded-2xl w-[350px] h-[420px] mx-auto bg-gray-900 hover:scale-[1.025] flex flex-col">
-                      <div className="h-44 bg-gray-950 flex items-center justify-center">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <ShoppingBag className="h-14 w-14 text-purple-400" />
-                        )}
+          {/* Product Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 justify-center">
+            {paginatedProducts.length === 0 ? (
+              <div className="col-span-full text-center text-gray-400 py-12">No products available.</div>
+            ) : (
+              paginatedProducts.map((item) => (
+                <Card key={item.id} className="relative group overflow-hidden shadow-xl hover:shadow-2xl transition-all border border-gray-800 rounded-2xl w-[350px] h-[420px] mx-auto bg-gray-900 hover:scale-[1.025] flex flex-col">
+                  <div className="h-44 bg-gray-950 flex items-center justify-center">
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <ShoppingBag className="h-14 w-14 text-purple-400" />
+                    )}
+                  </div>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg font-bold text-purple-200 leading-tight">{item.name}</CardTitle>
+                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-base px-3 py-1">{item.points_required} pts</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-4 flex-1">
+                    <p className="text-gray-300 text-sm mb-2 min-h-[40px] leading-snug">{item.description}</p>
+                    {item.stock !== undefined && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        Stock: {typeof item.stock === 'number' ? `${item.stock} left` : item.stock}
                       </div>
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg font-bold text-purple-200 leading-tight">{item.name}</CardTitle>
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-base px-3 py-1">{item.points} pts</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-4 flex-1">
-                        <p className="text-gray-300 text-sm mb-2 min-h-[40px] leading-snug">{item.description}</p>
-                        <div className="mt-2 text-xs text-gray-500">
-                          Stock: {typeof item.stock === 'number' ? `${item.stock} left` : item.stock}
-                        </div>
-                      </CardContent>
-                      <CardFooter className="border-t bg-gray-950 pt-4">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="w-full text-base"
-                              variant={profile.points >= item.points ? 'default' : 'outline'}
-                              disabled={profile.points < item.points}
-                              onClick={() => setSelectedItem(item)}
-                            >
-                              {profile.points >= item.points ? 'Redeem' : `Need ${item.points - profile.points} more points`}
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="bg-gray-900 border border-gray-800">
-                            <DialogHeader>
-                              <DialogTitle>Confirm Purchase</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex flex-col items-center gap-4 py-4">
-                              <ShoppingBag className="h-10 w-10 text-purple-400" />
-                              <div className="text-lg font-semibold">{item.name}</div>
-                              <div className="text-purple-600 text-sm mb-2">{item.description}</div>
-                              <div className="text-purple-700 font-bold">Cost: {item.points} points</div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="border-t bg-gray-950 pt-4">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="w-full text-base"
+                          variant={profile.points >= item.points_required ? 'default' : 'outline'}
+                          disabled={profile.points < item.points_required}
+                          onClick={() => setSelectedItem(item)}
+                        >
+                          {profile.points >= item.points_required ? 'Redeem' : `Need ${item.points_required - profile.points} more points`}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 border border-purple-500/50 shadow-xl max-w-md w-full p-0 rounded-2xl overflow-hidden [&>button:first-child]:hidden">
+                        {/* Close Button */}
+                        <DialogClose asChild>
+                          <button className="absolute right-5 top-5 z-50 rounded-full p-4 bg-purple-400/90 hover:bg-purple-300/90 backdrop-blur-sm border-2 border-purple-300/50 transition-all duration-200">
+                            <X className="h-7 w-7 text-white" strokeWidth={2} />
+                          </button>
+                        </DialogClose>
+
+                        {/* Product Image with Gradient Overlay */}
+                        <div className="relative h-64 w-full">
+                          {item.image_url ? (
+                            <img 
+                              src={item.image_url} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-gray-900">
+                              <ShoppingBag className="w-16 h-16 text-purple-400/80" />
                             </div>
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedItem(null)}
-                                disabled={purchaseLoading}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={() => handlePurchase(item)}
-                                disabled={purchaseLoading}
-                                className="bg-purple-700 hover:bg-purple-800"
-                              >
-                                {purchaseLoading ? 'Processing...' : 'Confirm'}
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+                          )}
+                          {/* Dark gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
+                          
+                          {/* Product Title on Image */}
+                          <div className="absolute bottom-0 left-0 right-0 p-6">
+                            <h2 className="text-2xl font-bold text-white mb-2">{item.name}</h2>
+                            <p className="text-gray-300 text-sm line-clamp-2">{item.description}</p>
+                          </div>
+                        </div>
+
+                        {/* Content Section */}
+                        <div className="p-6 pt-4">
+                          {/* Points Display */}
+                          <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/20">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-purple-500/20">
+                                  <Gift className="w-5 h-5 text-purple-300" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-purple-200">Cost</p>
+                                  <p className="text-xl font-bold text-white">{item.points_required} points</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-purple-200">Your Balance</p>
+                                <p className="text-xl font-bold text-white">{profile.points} points</p>
+              </div>
+              </div>
+              </div>
+
+                          {/* Confirmation Message */}
+                          <p className="text-center text-gray-400 text-sm my-4">
+                            Are you sure you want to purchase this item?
+                          </p>
+
+                          {/* Purchase Button */}
+                          <Button
+                            type="button"
+                            onClick={() => handlePurchase(item)}
+                            disabled={purchaseLoading || profile.points < item.points_required}
+                            className={`w-full py-6 text-lg font-semibold ${
+                              profile.points >= item.points_required
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                : 'bg-gray-800 text-gray-400 cursor-not-allowed'
+                            }`}
+                          >
+                            {purchaseLoading ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Processing...
+                              </div>
+                            ) : profile.points >= item.points_required ? (
+                              'Confirm Purchase'
+                            ) : (
+                              'Insufficient Points'
+                            )}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </CardFooter>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                className="bg-purple-700 text-white border-2 border-purple-500 font-bold px-6 py-2 rounded-lg shadow hover:bg-purple-800 focus:ring-2 focus:ring-purple-400 disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Prev
+              </Button>
+              <span className="text-purple-200 font-semibold">Page {page} of {totalPages}</span>
+              <Button
+                className="bg-purple-700 text-white border-2 border-purple-500 font-bold px-6 py-2 rounded-lg shadow hover:bg-purple-800 focus:ring-2 focus:ring-purple-400 disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
 
           {/* How to Earn More Points */}
           <div className="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 mt-12">

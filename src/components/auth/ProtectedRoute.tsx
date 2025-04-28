@@ -36,7 +36,7 @@ export const ProtectedRoute = ({
         description: "Please sign in to access this page",
         variant: "destructive",
       });
-      navigate('/login');
+      navigate('/');
     } else if (requireUnauth && authUser) {
       const isAuthPage = window.location.pathname === '/login' || 
                         window.location.pathname === '/register' || 

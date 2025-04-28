@@ -5,7 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { GraduationCap, MessageCircle, ShoppingBag, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -300,7 +300,7 @@ const Index = () => {
                   </p>
                   <div className="flex flex-col md:flex-row justify-center gap-4 max-w-md mx-auto">
                     {!user && (
-                      <Fragment>
+                      <>
                         <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
                           <DialogTrigger asChild>
                             <Button 
@@ -311,6 +311,7 @@ const Index = () => {
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="bg-transparent border-0 max-w-full p-0 flex items-center justify-center">
+                            <DialogTitle className="sr-only">Sign up</DialogTitle>
                             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" aria-hidden="true"></div>
                             <div className="relative z-50 w-full flex items-center justify-center min-h-screen">
                               <SignupModal onSuccess={() => setSignupOpen(false)} />
@@ -328,13 +329,14 @@ const Index = () => {
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="bg-transparent border-0 max-w-full p-0 flex items-center justify-center">
+                            <DialogTitle className="sr-only">Log in</DialogTitle>
                             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" aria-hidden="true"></div>
                             <div className="relative z-50 w-full flex items-center justify-center min-h-screen">
                               <LoginModal onSuccess={() => setLoginOpen(false)} showLoading={showLoading} />
                             </div>
                           </DialogContent>
                         </Dialog>
-                      </Fragment>
+                      </>
                     )}
                   </div>
                 </div>

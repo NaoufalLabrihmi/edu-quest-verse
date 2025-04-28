@@ -21,6 +21,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import ProductTable from '@/components/admin/ProductTable';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useNavigate } from 'react-router-dom';
 
 ChartJS.register(
   CategoryScale,
@@ -60,6 +63,8 @@ const DashboardAdmin = () => {
   const [editSuccess, setEditSuccess] = useState('');
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Placeholder stats
   const stats = [
@@ -214,6 +219,18 @@ const DashboardAdmin = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      await signOut();
+      navigate('/', { replace: true });
+    } catch (error) {
+      toast.error('Failed to log out');
+    }
+  };
+
+
   useEffect(() => {
     if (active !== 'users') return;
     setLoadingUsers(true);
@@ -255,7 +272,7 @@ const DashboardAdmin = () => {
             Admin
           </span>
         </div>
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
             <button
               key={item.key}
@@ -269,6 +286,21 @@ const DashboardAdmin = () => {
             </button>
           ))}
         </nav>
+        {/* Logout button at bottom of sidebar */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2 mt-auto mb-4 rounded-lg text-base font-medium transition-all duration-150 hover:bg-red-900/40 focus:outline-none border border-transparent text-red-300 hover:text-red-200 hover:border-red-800/50 group"
+        >
+          <svg
+            className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
       </aside>
 
       {/* Main content */}
