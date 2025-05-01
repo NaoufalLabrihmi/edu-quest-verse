@@ -136,11 +136,11 @@ const ShopPage = () => {
     } catch (error) {
       console.error('Purchase error:', error);
       setPurchaseLoading(false);
-      toast({
+    toast({
         variant: "destructive",
         title: 'Purchase Failed',
         description: 'There was an error processing your purchase. Please try again.',
-      });
+    });
     }
   };
 

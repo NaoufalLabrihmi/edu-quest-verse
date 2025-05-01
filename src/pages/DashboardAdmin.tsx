@@ -24,6 +24,7 @@ import ProductTable from '@/components/admin/ProductTable';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useNavigate } from 'react-router-dom';
+import PurchaseTable from '@/components/admin/PurchaseTable';
 
 ChartJS.register(
   CategoryScale,
@@ -41,6 +42,7 @@ const navItems = [
   { key: 'users', label: 'Users', icon: <Users className="w-4 h-4 mr-2" /> },
   { key: 'products', label: 'Products', icon: <Package className="w-4 h-4 mr-2" /> },
   { key: 'categories', label: 'Forum Categories', icon: <Layers className="w-4 h-4 mr-2" /> },
+  { key: 'purchases', label: 'Purchases', icon: <Package className="w-4 h-4 mr-2" /> },
 ];
 
 const glass =
@@ -494,6 +496,11 @@ const DashboardAdmin = () => {
               <p className="text-gray-400 text-sm">(Forum category management table goes here.)</p>
             </div>
           </section>
+        )}
+        {active === 'purchases' && (
+          <div className="space-y-4">
+            <PurchaseTable />
+          </div>
         )}
       </main>
       <Dialog open={!!editUser} onOpenChange={closeEditModal}>
