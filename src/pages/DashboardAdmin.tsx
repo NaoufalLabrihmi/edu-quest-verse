@@ -463,21 +463,61 @@ const DashboardAdmin = () => {
                   </Table>
                 )}
               </ScrollArea>
-              {/* Pagination controls (UI only for now) */}
-              <div className="flex justify-end items-center gap-2 px-4 py-3 border-t border-gray-800 bg-gray-900/70 rounded-b-xl">
-                <button
-                  className="px-3 py-1 rounded bg-gray-800/60 text-gray-300 hover:bg-purple-800/60 transition"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >Prev</button>
-                <span className="text-sm text-gray-400">
-                  Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
-                </span>
-                <button
-                  className="px-3 py-1 rounded bg-gray-800/60 text-gray-300 hover:bg-purple-800/60 transition"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= Math.ceil(totalCount / pageSize)}
-                >Next</button>
+              {/* Pagination controls */}
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-800 bg-gray-900/50">
+                <div className="text-sm text-gray-400">
+                  Showing {Math.min((page - 1) * pageSize + 1, totalCount)} to{' '}
+                  {Math.min(page * pageSize, totalCount)} of {totalCount} entries
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1 || loadingUsers}
+                    className="bg-gray-900/70 border-gray-800 text-gray-200 hover:bg-gray-800"
+                  >
+                    Previous
+                  </Button>
+                  {Array.from({ length: Math.min(Math.ceil(totalCount / pageSize), 5) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (Math.ceil(totalCount / pageSize) > 5) {
+                      if (page > 3 && page < Math.ceil(totalCount / pageSize) - 2) {
+                        pageNum = i === 0 ? 1 
+                          : i === 1 ? page - 1
+                          : i === 2 ? page
+                          : i === 3 ? page + 1
+                          : Math.ceil(totalCount / pageSize);
+                      } else if (page >= Math.ceil(totalCount / pageSize) - 2) {
+                        pageNum = Math.ceil(totalCount / pageSize) - 4 + i;
+                      }
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPage(pageNum)}
+                        disabled={loadingUsers}
+                        className={pageNum === page 
+                          ? "bg-purple-600 hover:bg-purple-700 text-white border-none"
+                          : "bg-gray-900/70 border-gray-800 text-gray-200 hover:bg-gray-800"
+                        }
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === Math.ceil(totalCount / pageSize) || loadingUsers}
+                    className="bg-gray-900/70 border-gray-800 text-gray-200 hover:bg-gray-800"
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
