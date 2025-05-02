@@ -88,8 +88,73 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Check if student is already in the quiz
-      const { data: existingParticipation, error: participationError } = await (supabase as any)
+      // 1. Find any session for the quiz, not just active ones
+      const { data: activeSessions, error: sessionError } = await supabase
+        .from('quiz_sessions')
+        .select('*')
+        .eq('quiz_id', quizDetails.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      console.log('Fetched sessions:', activeSessions);
+      
+      if (sessionError) {
+        console.error('Session error details:', sessionError);
+        throw sessionError;
+      }
+      
+      let session;
+      
+      if (!activeSessions || activeSessions.length === 0) {
+        // No session exists - create one in 'waiting' status
+        console.log('No session found, creating a new waiting session');
+        
+        // Get the first question to set its time limit
+        const { data: questions, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('quiz_id', quizDetails.id)
+          .order('order_number', { ascending: true });
+          
+        if (questionsError) {
+          console.error('Error fetching questions:', questionsError);
+          throw questionsError;
+        }
+        
+        // Default time limit if no questions found
+        const defaultTimeLimit = 60;
+        const firstQuestionTimeLimit = questions && questions.length > 0 ? questions[0].time_limit : defaultTimeLimit;
+        
+        // Create a new waiting session
+        const { data: newSession, error: createError } = await supabase
+          .from('quiz_sessions')
+          .insert({
+            quiz_id: quizDetails.id,
+            created_by: user.id, // Student creates the session
+            current_question_index: 0,
+            status: 'waiting',
+            time_remaining: firstQuestionTimeLimit,
+            started_at: new Date().toISOString(),
+            ended_at: null
+          })
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error('Error creating session:', createError);
+          throw createError;
+        }
+        
+        session = newSession;
+      } else {
+        // Use the most recent session
+        session = activeSessions[0];
+      }
+      
+      console.log('Using session_id:', session.id);
+
+      // 2. Check if student is already in the quiz
+      const { data: existingParticipation, error: participationError } = await supabase
         .from('quiz_participants')
         .select('*')
         .eq('quiz_id', quizDetails.id)
@@ -98,20 +163,24 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
       if (participationError) throw participationError;
 
       if (existingParticipation && existingParticipation.length > 0) {
+        console.log('Student already participating:', existingParticipation);
         navigate(`/quiz/${quizDetails.id}/waiting-room`);
         return;
       }
 
-      // Add student to quiz
-      const { error: insertError } = await (supabase as any)
+      // 3. Add student to session
+      const participantObj = {
+        session_id: session.id,
+        quiz_id: quizDetails.id,
+        user_id: user.id,
+        student_id: user.id,
+        status: 'joined',
+        joined_at: new Date().toISOString(),
+      };
+      console.log('Inserting participant:', participantObj);
+      const { error: insertError } = await supabase
         .from('quiz_participants')
-        .insert({
-          quiz_id: quizDetails.id,
-          student_id: user.id,
-          user_id: user.id,
-          status: 'joined',
-          joined_at: new Date().toISOString(),
-        });
+        .insert(participantObj);
 
       if (insertError) {
         console.error('Insert error details:', insertError);
@@ -122,7 +191,20 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
       const channel = supabase
         .channel(`quiz:${quizDetails.id}`)
         .on('broadcast', { event: 'quiz_started' }, (payload) => {
+          console.log('Received quiz_started event:', payload);
           navigate(`/quiz/${quizDetails.id}/active`);
+        })
+        .subscribe();
+
+      // Subscribe to session status changes as well
+      const statusChannel = supabase
+        .channel('session-update')
+        .on('broadcast', { event: 'session_status_changed' }, (payload) => {
+          console.log('Received session status update in join dialog:', payload);
+          if (payload.payload.session_id === session.id && payload.payload.status === 'active') {
+            // Quiz is active, navigate to active view
+            navigate(`/quiz/${quizDetails.id}/active`);
+          }
         })
         .subscribe();
 

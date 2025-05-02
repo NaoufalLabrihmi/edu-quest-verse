@@ -15,3 +15,34 @@ console.log('SUPABASE_PUBLISHABLE_KEY:');
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+export interface QuizSession {
+  id: string;
+  quiz_id: string;
+  current_question_index: number;
+  status: 'waiting' | 'active' | 'paused' | 'question_ended' | 'ended';
+  time_remaining: number;
+  started_at: string;
+  ended_at: string | null;
+  created_by: string;
+}
+
+export interface QuizParticipantAnswer {
+  id: string;
+  session_id: string;
+  question_id: string;
+  participant_id: string;
+  answer: string;
+  is_correct: boolean;
+  points_earned: number;
+  response_time: number;
+  created_at: string;
+}
+
+export interface QuizParticipant {
+  id: string;
+  session_id: string;
+  user_id: string;
+  total_points: number;
+  joined_at: string;
+}
