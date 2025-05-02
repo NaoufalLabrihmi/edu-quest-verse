@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
+import { Edit2, Trash2 } from 'lucide-react';
 
 // Add a type for the product form state
 interface ProductForm {
@@ -25,6 +26,8 @@ const ProductTable = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [refresh, setRefresh] = useState(0);
+  // Add search state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch products from Supabase
   useEffect(() => {
@@ -38,6 +41,11 @@ const ProductTable = () => {
     };
     fetchProducts();
   }, [refresh]);
+
+  // Filter products by search query
+  const filteredProducts = searchQuery.trim()
+    ? products.filter(p => p.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : products;
 
   const openModal = (product = null) => {
     setEditProduct(product);
@@ -133,8 +141,18 @@ const ProductTable = () => {
   };
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 text-transparent bg-clip-text">Manage Products</h1>
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 text-transparent bg-clip-text mb-4">Manage Products</h1>
+      <div className="flex flex-row items-center justify-between mb-6 gap-2">
+        <div className="flex flex-1 max-w-xs w-full relative">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 w-full bg-purple-950/50 border-purple-800/50 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-700 rounded-lg py-2 pr-2"
+          />
+          <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+        </div>
         <Button onClick={() => openModal()} className="bg-purple-700 hover:bg-purple-800 text-white font-semibold px-6 py-2 rounded-lg shadow">Add Product</Button>
       </div>
       <div className="bg-gray-900/70 border border-gray-800 rounded-xl shadow-lg p-0">
@@ -150,12 +168,12 @@ const ProductTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-gray-400 py-8">No products found.</TableCell>
               </TableRow>
             ) : (
-              products.map((product, i) => (
+              filteredProducts.map((product, i) => (
                 <TableRow key={product.id} className="hover:bg-purple-900/20 transition-all group">
                   <TableCell>
                     {product.image_url ? (
@@ -169,8 +187,12 @@ const ProductTable = () => {
                   <TableCell className="text-blue-200 font-bold">{product.points_required}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => openModal(product)} className="text-blue-400">Edit</Button>
-                      <Button size="sm" variant="ghost" className="text-red-400" onClick={() => handleDelete(product)}>Delete</Button>
+                      <Button size="icon" variant="ghost" onClick={() => openModal(product)} className="p-2 rounded-full bg-gray-800/60 hover:bg-blue-700/70 transition-colors" title="Edit product">
+                        <Edit2 className="w-3.5 h-3.5 text-blue-300" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="p-2 rounded-full bg-gray-800/60 hover:bg-red-700/70 transition-colors" onClick={() => handleDelete(product)} title="Delete product">
+                        <Trash2 className="w-3.5 h-3.5 text-red-300" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

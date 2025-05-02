@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Package, BarChart2, Layers, GraduationCap, BookOpen, User2, Edit2, Trash2, ChevronDown, Loader2 } from 'lucide-react';
-import { Line, Bar } from 'react-chartjs-2';
+import { Users, Package, BarChart2, Layers, GraduationCap, BookOpen, User2, Edit2, Trash2, ChevronDown, Loader2, Coins, ListChecks, Menu, X } from 'lucide-react';
+import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,6 +11,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from 'chart.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,8 +35,35 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
+
+// Chart.js options for the user growth line chart
+const userGrowthOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: true,
+      labels: { color: '#c7d2fe', font: { size: 13 } },
+    },
+    tooltip: { enabled: true },
+  },
+  elements: {
+    point: { radius: 3 },
+    line: { borderWidth: 2 },
+  },
+  scales: {
+    x: {
+      ticks: { color: '#c7d2fe', font: { size: 11 } },
+      grid: { color: 'rgba(100,116,139,0.08)' },
+    },
+    y: {
+      ticks: { color: '#c7d2fe', font: { size: 11 } },
+      grid: { color: 'rgba(100,116,139,0.08)' },
+    },
+  },
+};
 
 const navItems = [
   { key: 'stats', label: 'Statistics', icon: <BarChart2 className="w-4 h-4 mr-2" /> },
@@ -55,7 +83,7 @@ const DashboardAdmin = () => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
   const [refreshUsers, setRefreshUsers] = useState(0);
   const [deletingId, setDeletingId] = useState(null);
@@ -67,107 +95,18 @@ const DashboardAdmin = () => {
   const [editEmail, setEditEmail] = useState('');
   const { signOut } = useAuth();
   const navigate = useNavigate();
-
-  // Placeholder stats
-  const stats = [
-    { label: 'Total Users', value: 1280, icon: <Users className="w-6 h-6 text-purple-400" /> },
-    { label: 'Students', value: 950, icon: <GraduationCap className="w-6 h-6 text-blue-400" /> },
-    { label: 'Teachers', value: 330, icon: <BookOpen className="w-6 h-6 text-emerald-400" /> },
-    { label: 'Products', value: 42, icon: <Package className="w-6 h-6 text-pink-400" /> },
-    { label: 'Forum Posts', value: 312, icon: <Layers className="w-6 h-6 text-yellow-400" /> },
-  ];
-
-  // Mock data for charts
-  const studentGrowthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'Student Growth',
-        data: [100, 200, 350, 500, 700, 850, 950],
-        borderColor: '#60a5fa',
-        backgroundColor: 'rgba(96,165,250,0.12)',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#60a5fa',
-        pointBorderColor: '#fff',
-      },
-    ],
-  };
-  const teacherGrowthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'Teacher Growth',
-        data: [30, 60, 100, 150, 200, 270, 330],
-        borderColor: '#34d399',
-        backgroundColor: 'rgba(52,211,153,0.12)',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#34d399',
-        pointBorderColor: '#fff',
-      },
-    ],
-  };
-  const userGrowthOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: { color: '#c7d2fe', font: { size: 12 } },
-      },
-      title: {
-        display: false,
-      },
-    },
-    elements: {
-      point: { radius: 3 },
-      line: { borderWidth: 2 },
-    },
-    scales: {
-      x: {
-        ticks: { color: '#c7d2fe', font: { size: 11 } },
-        grid: { color: 'rgba(100,116,139,0.08)' },
-      },
-      y: {
-        ticks: { color: '#c7d2fe', font: { size: 11 } },
-        grid: { color: 'rgba(100,116,139,0.08)' },
-      },
-    },
-  };
-
-  const activityData = {
-    labels: ['Products', 'Forum Posts'],
-    datasets: [
-      {
-        label: 'Count',
-        data: [42, 312],
-        backgroundColor: ['#f472b6', '#fde68a'],
-        borderRadius: 6,
-        barPercentage: 0.6,
-        categoryPercentage: 0.6,
-      },
-    ],
-  };
-  const activityOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      x: {
-        ticks: { color: '#c7d2fe', font: { size: 11 } },
-        grid: { color: 'rgba(100,116,139,0.08)' },
-      },
-      y: {
-        ticks: { color: '#c7d2fe', font: { size: 11 } },
-        grid: { color: 'rgba(100,116,139,0.08)' },
-      },
-    },
-  };
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [studentGrowth, setStudentGrowth] = useState([]);
+  const [teacherGrowth, setTeacherGrowth] = useState([]);
+  const [productActivity, setProductActivity] = useState([]);
+  const [forumActivity, setForumActivity] = useState([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+  const [purchasesPerMonth, setPurchasesPerMonth] = useState([]);
+  const [pointsAwardedPerMonth, setPointsAwardedPerMonth] = useState([]);
+  const [pointsSpentPerMonth, setPointsSpentPerMonth] = useState([]);
+  const [adminNavOpen, setAdminNavOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleDeleteUser = async (userId) => {
     setDeletingId(userId);
@@ -232,7 +171,6 @@ const DashboardAdmin = () => {
     }
   };
 
-
   useEffect(() => {
     if (active !== 'users') return;
     setLoadingUsers(true);
@@ -260,12 +198,277 @@ const DashboardAdmin = () => {
     });
   }, [active, search, roleFilter, page, pageSize, refreshUsers]);
 
+  useEffect(() => {
+    async function fetchStats() {
+      setStatsLoading(true);
+      const { data, error } = await supabase.rpc('dashboard_admin_stats');
+      if (!error && data) setStats(data);
+      setStatsLoading(false);
+    }
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    async function fetchCharts() {
+      setChartsLoading(true);
+      const [studentRes, teacherRes, productRes, forumRes, purchasesRes, pointsAwardedRes, pointsSpentRes] = await Promise.all([
+        supabase.rpc('student_growth_per_month'),
+        supabase.rpc('teacher_growth_per_month'),
+        supabase.rpc('product_activity_per_month'),
+        supabase.rpc('forum_activity_per_month'),
+        supabase.rpc('purchases_per_month'),
+        supabase.rpc('points_awarded_per_month'),
+        supabase.rpc('points_spent_per_month'),
+      ]);
+      setStudentGrowth(studentRes.data || []);
+      setTeacherGrowth(teacherRes.data || []);
+      setProductActivity(productRes.data || []);
+      setForumActivity(forumRes.data || []);
+      setPurchasesPerMonth(purchasesRes.data || []);
+      setPointsAwardedPerMonth(pointsAwardedRes.data || []);
+      setPointsSpentPerMonth(pointsSpentRes.data || []);
+      setChartsLoading(false);
+    }
+    fetchCharts();
+  }, []);
+
+  // Prepare chart data
+  const months = Array.from(new Set([
+    ...studentGrowth.map(d => d.month),
+    ...teacherGrowth.map(d => d.month),
+    ...productActivity.map(d => d.month),
+    ...forumActivity.map(d => d.month),
+    ...purchasesPerMonth.map(d => d.month),
+    ...pointsAwardedPerMonth.map(d => d.month),
+    ...pointsSpentPerMonth.map(d => d.month),
+  ])).sort();
+
+  const studentGrowthData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Student Growth',
+        data: months.map(m => studentGrowth.find(d => d.month === m)?.count || 0),
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96,165,250,0.12)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#60a5fa',
+        pointBorderColor: '#fff',
+      },
+    ],
+  };
+  const teacherGrowthData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Teacher Growth',
+        data: months.map(m => teacherGrowth.find(d => d.month === m)?.count || 0),
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52,211,153,0.12)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#34d399',
+        pointBorderColor: '#fff',
+      },
+    ],
+  };
+  const activityData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Products',
+        data: months.map(m => productActivity.find(d => d.month === m)?.count || 0),
+        backgroundColor: '#f472b6',
+        borderRadius: 6,
+        barPercentage: 0.6,
+        categoryPercentage: 0.6,
+      },
+      {
+        label: 'Forum Posts',
+        data: months.map(m => forumActivity.find(d => d.month === m)?.count || 0),
+        backgroundColor: '#fde68a',
+        borderRadius: 6,
+        barPercentage: 0.6,
+        categoryPercentage: 0.6,
+      },
+    ],
+  };
+
+  // Forum & Products chart
+  const forumProductsData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Forum Posts',
+        data: months.map(m => forumActivity.find(d => d.month === m)?.count || 0),
+        borderColor: '#fde68a',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: '#fde68a',
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+      {
+        label: 'Products',
+        data: months.map(m => productActivity.find(d => d.month === m)?.count || 0),
+        borderColor: '#f472b6',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: '#f472b6',
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+    ],
+  };
+  // Purchases chart
+  const purchasesData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Purchases',
+        data: months.map(m => purchasesPerMonth.find(d => d.month === m)?.count || 0),
+        borderColor: '#a78bfa',
+        backgroundColor: '#a78bfa',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: '#a78bfa',
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+    ],
+  };
+  // Points Awarded & Spent chart
+  const pointsData = {
+    labels: months,
+    datasets: [
+      {
+        label: 'Points Awarded',
+        data: months.map(m => pointsAwardedPerMonth.find(d => d.month === m)?.total || 0),
+        borderColor: '#facc15',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: '#facc15',
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+      {
+        label: 'Points Spent',
+        data: months.map(m => pointsSpentPerMonth.find(d => d.month === m)?.total || 0),
+        borderColor: '#818cf8',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: '#818cf8',
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+    ],
+  };
+
+  // Pie chart for user role distribution
+  const userRoleData = {
+    labels: ['Students', 'Teachers'],
+    datasets: [
+      {
+        data: [stats?.total_students || 0, stats?.total_teachers || 0],
+        backgroundColor: ['#60a5fa', '#34d399'],
+        borderColor: ['#1e40af', '#065f46'],
+        borderWidth: 2,
+      },
+    ],
+  };
+  // Doughnut chart for points awarded vs spent
+  const pointsDoughnutData = {
+    labels: ['Awarded', 'Spent'],
+    datasets: [
+      {
+        data: [stats?.total_points_awarded || 0, stats?.total_points_spent || 0],
+        backgroundColor: ['#fde68a', '#818cf8'],
+        borderColor: ['#facc15', '#3730a3'],
+        borderWidth: 2,
+      },
+    ],
+  };
+
   return (
     <div className="flex min-h-screen relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-x-hidden">
       {/* Soft gradient overlay for extra depth */}
       <div className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-br from-purple-900/30 via-transparent to-blue-900/20" />
-      {/* Left vertical nav */}
-      <aside className={`w-52 flex flex-col py-6 px-2 gap-2 ${glass} sticky top-0 h-screen z-30 border-r border-gray-800/80`}> 
+      {/* Floating sidebar toggle button */}
+      <button
+        className="fixed top-4 left-4 z-50 p-2 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 shadow-lg hover:scale-105 transition-transform md:hidden"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open admin sidebar"
+      >
+        <Menu className="w-7 h-7 text-white" />
+      </button>
+      {/* Sidebar Drawer */}
+      <div className={`fixed inset-0 z-40 transition-all duration-300 ${sidebarOpen ? 'visible' : 'invisible pointer-events-none'}`}
+        style={{ background: sidebarOpen ? 'rgba(20,20,40,0.45)' : 'transparent' }}
+        onClick={() => setSidebarOpen(false)}
+      >
+        <aside
+          className={`absolute top-0 left-0 h-full w-64 bg-gradient-to-br from-gray-950/90 via-gray-900/90 to-blue-950/90 border-r border-purple-700/40 shadow-2xl backdrop-blur-xl flex flex-col py-6 px-2 gap-2 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-8 px-2">
+            <span className="inline-flex items-center gap-2">
+              <span className="p-2 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600">
+                <BarChart2 className="h-5 w-5 text-white" />
+              </span>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                Admin
+              </span>
+            </span>
+            <button
+              className="p-2 rounded-full hover:bg-gray-800/60 transition"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <X className="w-6 h-6 text-gray-300" />
+            </button>
+          </div>
+          <nav className="flex flex-col gap-1 flex-1">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                className={`flex items-center px-3 py-2 rounded-lg text-base font-medium transition-all duration-150 hover:bg-purple-800/40 focus:outline-none border border-transparent w-full text-left ${
+                  active === item.key ? 'bg-purple-800/70 border-purple-500 shadow' : 'bg-transparent'
+                }`}
+                onClick={() => { setActive(item.key); setSidebarOpen(false); }}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </nav>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 mt-auto mb-4 rounded-lg text-base font-medium transition-all duration-150 hover:bg-red-900/40 focus:outline-none border border-transparent text-red-300 hover:text-red-200 hover:border-red-800/50 group"
+          >
+            <svg
+              className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
+        </aside>
+      </div>
+      {/* Desktop sidebar (hidden on mobile) */}
+      <aside className={`hidden md:flex w-52 flex-col py-6 px-2 gap-2 ${glass} sticky top-0 h-screen z-30 border-r border-gray-800/80`}> 
         <div className="mb-6 flex items-center gap-2 px-2">
           <span className="inline-block p-1.5 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600">
             <BarChart2 className="h-5 w-5 text-white" />
@@ -278,7 +481,7 @@ const DashboardAdmin = () => {
           {navItems.map((item) => (
             <button
               key={item.key}
-              className={`flex items-center px-3 py-2 rounded-lg text-base font-medium transition-all duration-150 hover:bg-purple-800/40 focus:outline-none border border-transparent ${
+              className={`flex items-center px-3 py-2 rounded-lg text-base font-medium transition-all duration-150 hover:bg-purple-800/40 focus:outline-none border border-transparent w-full text-left ${
                 active === item.key ? 'bg-purple-800/70 border-purple-500 shadow' : 'bg-transparent'
               }`}
               onClick={() => setActive(item.key)}
@@ -288,7 +491,6 @@ const DashboardAdmin = () => {
             </button>
           ))}
         </nav>
-        {/* Logout button at bottom of sidebar */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 px-3 py-2 mt-auto mb-4 rounded-lg text-base font-medium transition-all duration-150 hover:bg-red-900/40 focus:outline-none border border-transparent text-red-300 hover:text-red-200 hover:border-red-800/50 group"
@@ -312,35 +514,184 @@ const DashboardAdmin = () => {
             <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 text-transparent bg-clip-text">
               Dashboard Statistics
             </h1>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-              {stats.map((stat) => (
-                <div key={stat.label} className={`${glass} p-5 flex items-center gap-4 min-w-0`}> 
-                  <div>{stat.icon}</div>
-                  <div className="truncate">
-                    <div className="text-xl font-bold text-white mb-0.5 truncate">{stat.value}</div>
-                    <div className="text-base text-gray-300 truncate">{stat.label}</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              {statsLoading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="animate-pulse bg-gray-900/70 border border-gray-800 rounded-xl p-5 h-24 flex items-center gap-4">
+                    <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                    <div>
+                      <div className="h-5 w-24 bg-gray-800 rounded mb-2" />
+                      <div className="h-4 w-16 bg-gray-800 rounded" />
+                    </div>
                   </div>
+                ))
+              ) : stats && (
+                <>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <Users className="w-6 h-6 text-purple-400" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_users}</div>
+                      <div className="text-base text-gray-300 truncate">Total Users</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <GraduationCap className="w-6 h-6 text-blue-400" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_students}</div>
+                      <div className="text-base text-gray-300 truncate">Students</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <BookOpen className="w-6 h-6 text-emerald-400" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_teachers}</div>
+                      <div className="text-base text-gray-300 truncate">Teachers</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <Package className="w-6 h-6 text-pink-400" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_products}</div>
+                      <div className="text-base text-gray-300 truncate">Products</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <ListChecks className="w-6 h-6 text-purple-300" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_purchases}</div>
+                      <div className="text-base text-gray-300 truncate">Purchases</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <Coins className="w-6 h-6 text-yellow-300" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_points_awarded}</div>
+                      <div className="text-base text-gray-300 truncate">Points Awarded</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <Coins className="w-6 h-6 text-purple-400" />
+                    <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_points_spent}</div>
+                      <div className="text-base text-gray-300 truncate">Points Spent</div>
+                    </div>
+                  </div>
+                  <div className={`${glass} p-5 flex items-center gap-4 min-w-0`}>
+                    <Layers className="w-6 h-6 text-yellow-400" />
+                  <div className="truncate">
+                      <div className="text-xl font-bold text-white mb-0.5 truncate">{stats.total_forum_posts}</div>
+                      <div className="text-base text-gray-300 truncate">Forum Posts</div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Analytics Grid */}
+            <div className="my-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* User Growth Over Time (Line) */}
+              <div className="w-full max-w-xl mx-auto p-0 rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-950/60 via-gray-900/80 to-gray-950/90 shadow-lg backdrop-blur-xl">
+                <div className="flex items-center justify-between px-6 pt-5 pb-2">
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-emerald-400 text-transparent bg-clip-text">User Growth Over Time</h2>
                 </div>
-              ))}
-            </div>
-            {/* Graphs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className={`${glass} p-4 flex flex-col items-center min-w-0`}>
-                <h2 className="text-base font-semibold mb-2 text-blue-200">Student Growth</h2>
-                <Line data={studentGrowthData} options={userGrowthOptions} height={160} />
+                <div className="px-4 pb-5">
+                  {chartsLoading ? (
+                    <Loader2 className="h-7 w-7 animate-spin text-blue-400 my-8 mx-auto" />
+                  ) : (
+                    <Line
+                      data={{
+                        labels: months,
+                        datasets: [
+                          {
+                            label: 'Students',
+                            data: months.map(m => studentGrowth.find(d => d.month === m)?.count || 0),
+                            borderColor: '#60a5fa',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            fill: false,
+                            pointBackgroundColor: '#60a5fa',
+                            pointBorderColor: '#fff',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                          },
+                          {
+                            label: 'Teachers',
+                            data: months.map(m => teacherGrowth.find(d => d.month === m)?.count || 0),
+                            borderColor: '#34d399',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            fill: false,
+                            pointBackgroundColor: '#34d399',
+                            pointBorderColor: '#fff',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                          },
+                        ],
+                      }}
+                      options={{
+                        ...userGrowthOptions,
+                        plugins: {
+                          ...userGrowthOptions.plugins,
+                          legend: { display: true, labels: { color: '#c7d2fe', font: { size: 13 } } },
+                          tooltip: { enabled: true },
+                        },
+                        elements: { ...userGrowthOptions.elements, line: { borderWidth: 2 } },
+                        scales: {
+                          x: { ...userGrowthOptions.scales.x, grid: { color: 'rgba(100,116,139,0.08)' }, ticks: { color: '#c7d2fe', font: { size: 11 } } },
+                          y: { ...userGrowthOptions.scales.y, grid: { color: 'rgba(100,116,139,0.08)' }, ticks: { color: '#c7d2fe', font: { size: 11 } } },
+                        },
+                      }}
+                      height={120}
+                    />
+                  )}
+                </div>
               </div>
-              <div className={`${glass} p-4 flex flex-col items-center min-w-0`}>
-                <h2 className="text-base font-semibold mb-2 text-emerald-200 flex items-center gap-1"><BookOpen className="inline w-4 h-4 text-emerald-300" /> Teacher Growth</h2>
-                <Line data={teacherGrowthData} options={userGrowthOptions} height={160} />
+              {/* Forum Posts & Products (Bar) */}
+              <div className="w-full max-w-xl mx-auto p-0 rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-yellow-900/40 via-gray-900/80 to-gray-950/90 shadow-lg backdrop-blur-xl">
+                <div className="flex items-center justify-between px-6 pt-5 pb-2">
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-yellow-300 to-pink-400 text-transparent bg-clip-text">Forum Posts & Products</h2>
+                </div>
+                <div className="px-4 pb-5">
+                  {chartsLoading ? (
+                    <Loader2 className="h-7 w-7 animate-spin text-yellow-400 my-8 mx-auto" />
+                  ) : (
+                    <Bar
+                      data={{
+                        labels: months,
+                        datasets: [
+                          {
+                            label: 'Forum Posts',
+                            data: months.map(m => forumActivity.find(d => d.month === m)?.count || 0),
+                            backgroundColor: '#fde68a',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.6,
+                          },
+                          {
+                            label: 'Products',
+                            data: months.map(m => productActivity.find(d => d.month === m)?.count || 0),
+                            backgroundColor: '#f472b6',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.6,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: { display: true, labels: { color: '#fde68a', font: { size: 13 } } },
+                          tooltip: { enabled: true },
+                        },
+                        scales: {
+                          x: { grid: { color: 'rgba(100,116,139,0.08)' }, ticks: { color: '#fde68a', font: { size: 11 } } },
+                          y: { grid: { color: 'rgba(100,116,139,0.08)' }, ticks: { color: '#fde68a', font: { size: 11 } } },
+                        },
+                      }}
+                      height={120}
+                    />
+                  )}
+                </div>
               </div>
-              <div className={`${glass} p-4 flex flex-col items-center min-w-0`}>
-                <h2 className="text-base font-semibold mb-2 text-pink-200">Product & Forum Activity</h2>
-                <Bar data={activityData} options={activityOptions} height={160} />
-              </div>
-            </div>
-            <div className={`${glass} p-5 mt-4`}> 
-              <h2 className="text-lg font-semibold mb-1 text-purple-200">Recent Activity</h2>
-              <p className="text-gray-400 text-sm">(Activity feed or charts can go here.)</p>
             </div>
           </section>
         )}
@@ -354,7 +705,7 @@ const DashboardAdmin = () => {
               <Input
                 type="text"
                 placeholder="Search users..."
-                className="bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 rounded-lg px-4 py-2 w-full max-w-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-700"
+                className="pl-9 w-full max-w-xs bg-purple-950/50 border-purple-800/50 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-700 rounded-lg py-2 pr-2"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -397,7 +748,7 @@ const DashboardAdmin = () => {
             </div>
             {/* User table */}
             <div className={`${glass} p-0`}>
-              <ScrollArea className="w-full max-h-[400px] rounded-xl">
+              <ScrollArea className="w-full max-h-[600px] rounded-xl pb-8">
                 {loadingUsers ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-purple-400" />

@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import debounce from 'lodash/debounce';
+import { PurchaseStatusBadge } from './PurchaseStatusBadge';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -150,31 +151,47 @@ const PurchaseTable = () => {
   const updatePurchaseStatus = async (purchaseId: string, newStatus: PurchaseStatus) => {
     setUpdatingId(purchaseId);
     try {
-      const { error } = await supabase
-        .from('purchases')
-        .update({ status: newStatus })
-        .eq('id', purchaseId);
-
-      if (error) throw error;
-      
-      // Update the local state to reflect the change immediately
-      setAllPurchases(prevPurchases => 
-        prevPurchases.map(purchase => 
-          purchase.id === purchaseId 
-            ? { ...purchase, status: newStatus }
-            : purchase
-        )
-      );
-
-      toast({
-        title: "Status Updated",
-        description: `Purchase status successfully updated to ${newStatus}`,
-        variant: "success",
-      });
+      if (newStatus === 'cancelled') {
+        // Call the new function to cancel and refund
+        const { error } = await supabase.rpc('cancel_purchase_and_refund', { purchase_id: purchaseId });
+        if (error) throw error;
+        // Update local state
+        setAllPurchases(prevPurchases => 
+          prevPurchases.map(purchase => 
+            purchase.id === purchaseId 
+              ? { ...purchase, status: 'cancelled' }
+              : purchase
+          )
+        );
+        toast({
+          title: 'Purchase Cancelled',
+          description: 'Points have been refunded to the student.',
+          variant: 'success',
+        });
+      } else {
+        // Normal status update
+        const { error } = await supabase
+          .from('purchases')
+          .update({ status: newStatus })
+          .eq('id', purchaseId);
+        if (error) throw error;
+        setAllPurchases(prevPurchases => 
+          prevPurchases.map(purchase => 
+            purchase.id === purchaseId 
+              ? { ...purchase, status: newStatus }
+              : purchase
+          )
+        );
+        toast({
+          title: 'Status Updated',
+          description: `Purchase status successfully updated to ${newStatus}`,
+          variant: 'success',
+        });
+      }
     } catch (error) {
       console.error('Error updating purchase status:', error);
       toast({
-        variant: "destructive",
+        variant: 'destructive',
         title: 'Update Failed',
         description: 'Failed to update purchase status. Please try again.',
       });
@@ -238,24 +255,6 @@ const PurchaseTable = () => {
   const handleDeleteCancel = () => {
     setShowDeleteDialog(false);
     setPurchaseToDelete(null);
-  };
-
-  const getStatusBadge = (status: PurchaseStatus) => {
-    const statusConfig = {
-      pending: { color: 'bg-yellow-500/20 text-yellow-200 border-yellow-500/30', icon: Clock },
-      completed: { color: 'bg-green-500/20 text-green-200 border-green-500/30', icon: CheckCircle2 },
-      cancelled: { color: 'bg-red-500/20 text-red-200 border-red-500/30', icon: XCircle },
-    };
-
-    const config = statusConfig[status];
-    const Icon = config.icon;
-
-    return (
-      <Badge className={`${config.color} flex items-center gap-1 px-2 py-1`}>
-        <Icon className="w-3.5 h-3.5" />
-        <span className="capitalize">{status}</span>
-      </Badge>
-    );
   };
 
   if (isLoading) {
@@ -401,7 +400,7 @@ const PurchaseTable = () => {
                       <span className="font-mono font-bold text-purple-300">{purchase.points_spent}</span>
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(purchase.status)}
+                      <PurchaseStatusBadge status={purchase.status} />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -411,7 +410,7 @@ const PurchaseTable = () => {
                             if (updatingId) return;
                             updatePurchaseStatus(purchase.id, value);
                           }}
-                          disabled={updatingId === purchase.id || deletingId === purchase.id}
+                          disabled={updatingId === purchase.id || deletingId === purchase.id || purchase.status === 'cancelled'}
                         >
                           <SelectTrigger 
                             className={`w-[130px] bg-gray-800/60 border-gray-700 text-gray-200 hover:bg-purple-900/40 focus:ring-purple-700 focus:ring-offset-0 ${

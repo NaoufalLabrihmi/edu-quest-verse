@@ -17,10 +17,14 @@ import {
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { GraduationCap, Settings, User, Plus, Key, Menu, X } from 'lucide-react';
+import { GraduationCap, Settings, User, Plus, Key, Menu, X, ShoppingBag, Receipt } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { toast } from 'react-hot-toast';
 import { JoinQuizDialog } from '@/components/quiz/JoinQuizDialog';
+import { PurchaseStatusBadge } from './admin/PurchaseStatusBadge';
+import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { StudentPurchaseDropdown } from './StudentPurchaseDropdown';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,12 +32,30 @@ export function Navigation() {
   const { user, profile, signOut, initialized, checkAuth } = useAuth();
   const navigate = useNavigate();
   const isProfessor = profile?.role === 'teacher' || profile?.role === 'admin';
+  const [showPurchases, setShowPurchases] = useState(false);
+  const [purchases, setPurchases] = useState([]);
+  const [purchasesLoading, setPurchasesLoading] = useState(false);
 
   useEffect(() => {
     if (!initialized || !profile) {
       checkAuth();
     }
   }, [initialized, profile, checkAuth]);
+
+  useEffect(() => {
+    if (profile?.role === 'student') {
+      setPurchasesLoading(true);
+      supabase
+        .from('purchases')
+        .select(`id, status, points_spent, created_at, products:products!purchases_product_id_fkey(name, image_url)`)
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          setPurchasesLoading(false);
+          if (!error && data) setPurchases(data);
+        });
+    }
+  }, [profile]);
 
   const handleSignOut = async () => {
     try {
@@ -131,13 +153,40 @@ export function Navigation() {
                     </Button>
                   )}
 
-                  {/* Common Routes for All Users */}
+                  {/* Shop always links to /shop */}
                   <Link 
                     to="/shop" 
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                   >
+                    <ShoppingBag className="w-5 h-5" />
                     Shop
                   </Link>
+                  {/* My Purchases icon for students */}
+                  {profile?.role === 'student' && (
+                    <div className="relative">
+                      <button
+                        className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
+                        onClick={() => setShowPurchases((v) => !v)}
+                        aria-label="My Purchases"
+                      >
+                        <Receipt className="w-5 h-5" />
+                        {purchases.filter(p => p.status === 'pending').length > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-pulse">
+                            {purchases.filter(p => p.status === 'pending').length}
+                          </span>
+                        )}
+                      </button>
+                      {showPurchases && (
+                        <StudentPurchaseDropdown
+                          purchases={purchases}
+                          loading={purchasesLoading}
+                          onClose={() => setShowPurchases(false)}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Forum Link */}
                   <Link 
                     to="/forum" 
                     className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
@@ -259,13 +308,40 @@ export function Navigation() {
                     </button>
                   )}
 
-                  {/* Common Routes for All Users */}
-                  <Link
-                    to="/shop"
-                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                  {/* Shop always links to /shop */}
+                  <Link 
+                    to="/shop" 
+                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                   >
+                    <ShoppingBag className="w-5 h-5" />
                     Shop
                   </Link>
+                  {/* My Purchases icon for students */}
+                  {profile?.role === 'student' && (
+                    <div className="relative">
+                      <button
+                        className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
+                        onClick={() => setShowPurchases((v) => !v)}
+                        aria-label="My Purchases"
+                      >
+                        <Receipt className="w-5 h-5" />
+                        {purchases.filter(p => p.status === 'pending').length > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-pulse">
+                            {purchases.filter(p => p.status === 'pending').length}
+                          </span>
+                        )}
+                      </button>
+                      {showPurchases && (
+                        <StudentPurchaseDropdown
+                          purchases={purchases}
+                          loading={purchasesLoading}
+                          onClose={() => setShowPurchases(false)}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Forum Link */}
                   <Link
                     to="/forum"
                     className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
