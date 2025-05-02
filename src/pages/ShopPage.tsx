@@ -35,8 +35,7 @@ const ShopPage = () => {
     fetchProducts();
   }, []);
 
-  // Debug print for troubleshooting
-  console.log('Loaded profile:', profile);
+ 
 
   if (loading || productsLoading) {
     return (
