@@ -40,7 +40,7 @@ interface Question {
   answer?: boolean | string;
   points: number;
   timeLimit: number;
-  pointMultiplier: number;
+  point_multiplier: number;
 }
 
 const defaultQuestion = (): Question => ({
@@ -52,7 +52,7 @@ const defaultQuestion = (): Question => ({
   answer: '',
   points: 5,
   timeLimit: 30,
-  pointMultiplier: 1,
+  point_multiplier: 1,
 });
 
 const CreateQuiz = () => {
@@ -129,7 +129,7 @@ const CreateQuiz = () => {
       text: currentQuestion.text,
       points: currentQuestion.points,
       timeLimit: currentQuestion.timeLimit,
-      pointMultiplier: currentQuestion.pointMultiplier,
+      point_multiplier: currentQuestion.point_multiplier,
       answer: type === 'true_false' ? true : type === 'short_answer' ? '' : '',
     });
   };
@@ -153,7 +153,7 @@ const CreateQuiz = () => {
       if (
         typeof q.points !== 'number' || q.points < 1 || q.points > 10 ||
         typeof q.timeLimit !== 'number' || q.timeLimit < 1 || q.timeLimit > 120 ||
-        typeof q.pointMultiplier !== 'number' || ![1, 2].includes(q.pointMultiplier)
+        typeof q.point_multiplier !== 'number' || ![1, 2].includes(q.point_multiplier)
       ) {
         toast({
           title: 'Invalid question values',
@@ -194,7 +194,7 @@ const CreateQuiz = () => {
         options: q.type === 'multiple_choice' ? q.options : null,
         points: q.points,
         time_limit: q.timeLimit,
-        point_multiplier: q.pointMultiplier,
+        point_multiplier: q.point_multiplier,
         order_number: idx + 1,
       }));
       const { error: questionsError } = await supabase
@@ -312,7 +312,7 @@ const CreateQuiz = () => {
                           <div className="pl-8 text-sm text-gray-400">
                             <span className="capitalize">{QUESTION_TYPES.find(t => t.value === question.type)?.label}</span>
                             <span className="mx-2">•</span>
-                            <span>{question.points} {question.points === 1 ? 'point' : 'points'}</span>
+                            <span>{(question.points || 0) * (question.point_multiplier || 1)} {(question.points || 0) * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}{question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}</span>
                             <span className="mx-2">•</span>
                             <span>{question.timeLimit} seconds</span>
                           </div>
@@ -492,8 +492,8 @@ const CreateQuiz = () => {
                   <div>
                     <Label htmlFor="point-multiplier">Point Multiplier</Label>
                     <Select
-                      value={currentQuestion.pointMultiplier.toString()}
-                      onValueChange={(v) => setCurrentQuestion({ ...currentQuestion, pointMultiplier: Number(v) })}
+                      value={currentQuestion.point_multiplier.toString()}
+                      onValueChange={(v) => setCurrentQuestion({ ...currentQuestion, point_multiplier: Number(v) })}
                     >
                       <SelectTrigger id="point-multiplier" className="mt-1 bg-gray-900 border-gray-700 text-white">
                         <SelectValue placeholder="Select multiplier" />

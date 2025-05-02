@@ -96,7 +96,7 @@ export function Navigation() {
 
   return (
     <>
-      <header className="bg-white/90 backdrop-blur-md border-b border-gray-100/50 shadow-sm sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-[#0f172a] to-[#1e293b] backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link 
@@ -104,11 +104,11 @@ export function Navigation() {
               className="flex items-center space-x-3 group" 
               onClick={handleLogoClick}
             >
-              <div className="p-2 rounded-lg bg-gradient-to-br from-edu-purple-500 to-edu-blue-500 group-hover:from-edu-purple-600 group-hover:to-edu-blue-600 transition-all duration-200 shadow-sm">
-                <GraduationCap className="h-6 w-6 text-white" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-slate-700 via-teal-700 to-slate-800 group-hover:from-slate-600 group-hover:to-teal-800 transition-all duration-200">
+                <GraduationCap className="h-7 w-7 text-teal-200" />
               </div>
-              <span className="text-xl font-display font-bold bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 bg-clip-text text-transparent group-hover:from-edu-purple-700 group-hover:to-edu-blue-700 transition-all duration-200">
-                EduQuestVerse
+              <span className="text-2xl font-serif font-extrabold bg-gradient-to-r from-slate-100 via-teal-200 to-slate-200 bg-clip-text text-transparent tracking-tight group-hover:from-slate-200 group-hover:to-teal-100 transition-all duration-200">
+                Brain Boost
               </span>
             </Link>
 
@@ -119,7 +119,7 @@ export function Navigation() {
                   {/* Common Routes for All Users */}
                   <Link 
                     to={isProfessor ? "/professor-dashboard" : "/student-dashboard"} 
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Dashboard
                   </Link>
@@ -130,13 +130,13 @@ export function Navigation() {
                     <>
                       <Link 
                         to="/quizzes" 
-                        className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                        className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                       >
                         Quizzes
                       </Link>
                       <Link 
                         to="/create-quiz" 
-                        className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                        className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                       >
                         Create Quiz
                       </Link>
@@ -145,7 +145,7 @@ export function Navigation() {
                     // Student Routes
                     <Button 
                       variant="ghost" 
-                      className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                      className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                       onClick={() => setIsJoinQuizOpen(true)}
                     >
                       <Key className="mr-2 h-4 w-4" />
@@ -156,7 +156,7 @@ export function Navigation() {
                   {/* Shop always links to /shop */}
                   <Link 
                     to="/shop" 
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                    className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                   >
                     <ShoppingBag className="w-5 h-5" />
                     Shop
@@ -165,7 +165,7 @@ export function Navigation() {
                   {profile?.role === 'student' && (
                     <div className="relative">
                       <button
-                        className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
+                        className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
                         onClick={() => setShowPurchases((v) => !v)}
                         aria-label="My Purchases"
                       >
@@ -189,7 +189,7 @@ export function Navigation() {
                   {/* Forum Link */}
                   <Link 
                     to="/forum" 
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Forum
                   </Link>
@@ -200,7 +200,7 @@ export function Navigation() {
                       <DropdownMenuTrigger asChild>
                         <Button 
                           variant="ghost" 
-                          className="relative h-10 w-10 rounded-full hover:bg-gray-100/80 transition-all duration-200 hover:shadow-sm"
+                          className="relative h-10 w-10 rounded-full hover:bg-slate-800/60 transition-all duration-200 hover:shadow-sm"
                         >
                           <Avatar className="h-10 w-10 border-2 border-gray-100 shadow-sm">
                             <AvatarImage src={user.user_metadata.avatar_url} alt={user.email || ''} />
@@ -238,7 +238,7 @@ export function Navigation() {
                 <div className="flex items-center space-x-4">
                   <Link 
                     to="/login" 
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-2 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Login
                   </Link>
@@ -254,13 +254,13 @@ export function Navigation() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100/80 transition-all duration-200 hover:shadow-sm"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-800/60 transition-all duration-200"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-6 w-6 text-teal-200" />
               ) : (
-                <Menu className="h-6 w-6 text-gray-600" />
+                <Menu className="h-6 w-6 text-teal-200" />
               )}
             </button>
           </div>
@@ -275,7 +275,7 @@ export function Navigation() {
                   {/* Common Routes for All Users */}
                   <Link
                     to={isProfessor ? "/professor-dashboard" : "/student-dashboard"}
-                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Dashboard
                   </Link>
@@ -286,13 +286,13 @@ export function Navigation() {
                     <>
                       <Link
                         to="/quizzes"
-                        className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                        className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                       >
                         Quizzes
                       </Link>
                       <Link
                         to="/create-quiz"
-                        className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                        className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                       >
                         Create Quiz
                       </Link>
@@ -300,7 +300,7 @@ export function Navigation() {
                   ) : (
                     // Student Routes
                     <button 
-                      className="w-full px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm text-left flex items-center"
+                      className="w-full px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm text-left flex items-center"
                       onClick={() => setIsJoinQuizOpen(true)}
                     >
                       <Key className="mr-2 h-4 w-4" />
@@ -311,7 +311,7 @@ export function Navigation() {
                   {/* Shop always links to /shop */}
                   <Link 
                     to="/shop" 
-                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                    className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                   >
                     <ShoppingBag className="w-5 h-5" />
                     Shop
@@ -320,7 +320,7 @@ export function Navigation() {
                   {profile?.role === 'student' && (
                     <div className="relative">
                       <button
-                        className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
+                        className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2 focus:outline-none"
                         onClick={() => setShowPurchases((v) => !v)}
                         aria-label="My Purchases"
                       >
@@ -344,7 +344,7 @@ export function Navigation() {
                   {/* Forum Link */}
                   <Link
                     to="/forum"
-                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Forum
                   </Link>
@@ -360,7 +360,7 @@ export function Navigation() {
                 <div className="flex flex-col space-y-2 py-2">
                   <Link
                     to="/login"
-                    className="px-4 py-3 rounded-lg text-gray-700 hover:text-edu-purple-600 hover:bg-gray-50/80 font-medium transition-all duration-200 hover:shadow-sm"
+                    className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm"
                   >
                     Login
                   </Link>
@@ -381,6 +381,11 @@ export function Navigation() {
         isOpen={isJoinQuizOpen} 
         onClose={() => setIsJoinQuizOpen(false)} 
       />
+
+      <style>{`
+        .shadow-cyan-glow { box-shadow: 0 0 24px 4px #22d3ee44, 0 0 48px 8px #38bdf844; }
+        .drop-shadow-cyan { text-shadow: 0 0 8px #22d3ee, 0 0 16px #38bdf8; }
+      `}</style>
     </>
   );
 }

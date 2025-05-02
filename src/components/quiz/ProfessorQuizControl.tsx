@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -24,6 +24,30 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('ProfessorQuizControl sessionId:', sessionId);
+  }, [sessionId]);
+
+  // Memoize fetchParticipants
+  const fetchParticipants = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('quiz_participants')
+      .select('*')
+      .eq('session_id', sessionId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch participants',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setParticipants(data);
+    console.log('Professor fetched participants:', data);
+  }, [sessionId, toast]);
+
+  useEffect(() => {
     // Subscribe to session updates
     const sessionSubscription = supabase
       .channel(`quiz_session_prof_${sessionId}`)
@@ -47,9 +71,9 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
         console.log('Professor subscription status:', status);
       });
 
-    // Subscribe to participant updates
-    const participantSubscription = supabase
-      .channel('quiz_participants')
+    // Subscribe to quiz_participants for this session using a unique channel name
+    const channel = supabase
+      .channel(`realtime:quiz_participants:session_id=eq.${sessionId}`)
       .on(
         'postgres_changes',
         {
@@ -58,7 +82,8 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
           table: 'quiz_participants',
           filter: `session_id=eq.${sessionId}`,
         },
-        () => {
+        (payload) => {
+          console.log('Realtime participant event (professor):', payload);
           fetchParticipants();
         }
       )
@@ -68,11 +93,17 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
     fetchSession();
     fetchParticipants();
 
+    // Polling fallback: fetch participants every 2 seconds
+    const pollInterval = setInterval(() => {
+      fetchParticipants();
+    }, 2000);
+
     return () => {
       sessionSubscription.unsubscribe();
-      participantSubscription.unsubscribe();
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
-  }, [sessionId]);
+  }, [sessionId, fetchParticipants]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -131,24 +162,6 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
         variant: 'destructive',
       });
     }
-  };
-
-  const fetchParticipants = async () => {
-    const { data, error } = await supabase
-      .from('quiz_participants')
-      .select('*')
-      .eq('session_id', sessionId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch participants',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setParticipants(data);
   };
 
   const fetchQuestionResults = async () => {
@@ -538,6 +551,35 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
     }
   };
 
+  // Add this function to end the quiz
+  const endQuizNow = async () => {
+    if (!session) return;
+    try {
+      const { error } = await supabase
+        .from('quiz_sessions')
+        .update({
+          status: 'ended',
+          ended_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId);
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to end quiz',
+          variant: 'destructive',
+        });
+        return;
+      }
+      navigate(`/quiz/${quizId}/results`);
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!session) return null;
 
   const currentQuestion = questions[session.current_question_index];
@@ -676,6 +718,16 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
           </div>
         </CardContent>
       </Card>
+      {/* End Quiz Button */}
+      <div className="flex justify-center mt-6">
+        <Button
+          variant="destructive"
+          onClick={endQuizNow}
+          className="w-full max-w-xs"
+        >
+          End Quiz
+        </Button>
+      </div>
     </div>
   );
 } 

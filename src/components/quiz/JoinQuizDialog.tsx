@@ -151,7 +151,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
         session = activeSessions[0];
       }
       
-      console.log('Using session_id:', session.id);
+      console.log('Using session_id:', session.id, 'for quiz_id:', quizDetails.id);
 
       // 2. Check if student is already in the quiz
       const { data: existingParticipation, error: participationError } = await supabase
@@ -183,7 +183,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
         .insert(participantObj);
 
       if (insertError) {
-        console.error('Insert error details:', insertError);
+        console.error('Insert error details:', insertError, 'for participant:', participantObj);
         throw insertError;
       }
 

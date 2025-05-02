@@ -470,7 +470,8 @@ const QuizPage = () => {
                     </CardTitle>
                     <div className="flex items-center space-x-2">
                       <Badge className="bg-indigo-500/10 text-indigo-300">
-                        {question.points} {question.points === 1 ? 'point' : 'points'}
+                        {question.points * (question.point_multiplier || 1)} {question.points * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}
+                        {question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}
                       </Badge>
                       <Badge className="bg-purple-500/10 text-purple-300">
                         {question.time_limit}s

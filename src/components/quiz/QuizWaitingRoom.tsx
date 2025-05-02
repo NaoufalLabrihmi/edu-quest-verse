@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 // @ts-ignore
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +47,64 @@ export function QuizWaitingRoom() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('QuizWaitingRoom quizId:', id);
+  }, [id]);
+
+  // Memoize fetchParticipants
+  const fetchParticipants = useCallback(async () => {
+    try {
+      // First get all participants for this quiz
+      const { data: participantsData, error: participantsError } = await supabase
+        .from('quiz_participants')
+        .select('*')
+        .eq('quiz_id', id)
+        .order('joined_at', { ascending: true });
+
+      if (participantsError) throw participantsError;
+
+      if (participantsData && participantsData.length > 0) {
+        // Then get usernames for all participants
+        const participantsWithUsernames = await Promise.all(
+          participantsData.map(async (participant: any) => {
+            try {
+              const { data: userData, error: userError } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', participant.student_id)
+                .single();
+              
+              if (userError || !userData) {
+                return {
+                  ...participant,
+                  username: 'Unknown'
+                };
+              }
+              
+              return {
+                ...participant,
+                username: userData.username
+              };
+            } catch (e) {
+              return { 
+                ...participant,
+                username: 'Unknown'
+              };
+            }
+          })
+        );
+        
+        setParticipants(participantsWithUsernames);
+        console.log('QuizWaitingRoom fetched participants:', participantsWithUsernames);
+      } else {
+        setParticipants([]);
+        console.log('QuizWaitingRoom fetched participants: []');
+      }
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (!id) return;
 
     const fetchQuizDetails = async () => {
@@ -75,80 +133,12 @@ export function QuizWaitingRoom() {
       }
     };
 
-    const fetchParticipants = async () => {
-      try {
-        // First get all participants for this quiz
-        const { data: participantsData, error: participantsError } = await supabase
-          .from('quiz_participants')
-          .select('*')
-          .eq('quiz_id', id)
-          .order('joined_at', { ascending: true });
-
-        if (participantsError) throw participantsError;
-
-        if (participantsData && participantsData.length > 0) {
-          // Then get usernames for all participants
-          const participantsWithUsernames = await Promise.all(
-            participantsData.map(async (participant: any) => {
-              try {
-                const { data: userData, error: userError } = await supabase
-                  .from('profiles')
-                  .select('username')
-                  .eq('id', participant.student_id)
-                  .single();
-                
-                if (userError || !userData) {
-                  return {
-                    ...participant,
-                    username: 'Unknown'
-                  };
-                }
-                
-                return {
-                  ...participant,
-                  username: userData.username
-                };
-              } catch (e) {
-                return { 
-                  ...participant,
-                  username: 'Unknown'
-                };
-              }
-            })
-          );
-          
-          setParticipants(participantsWithUsernames);
-        } else {
-          setParticipants([]);
-        }
-      } catch (error) {
-        console.error('Error fetching participants:', error);
-      }
-    };
-
-    // Set up realtime subscription for participants
-    const channel = supabase
-      .channel(`quiz:${id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'quiz_participants',
-        filter: `quiz_id=eq.${id}`
-      }, () => {
-        fetchParticipants();
-      })
-      .on('broadcast', { event: 'quiz_started' }, () => {
-        window.location.href = `/quiz/${id}/active`;
-      })
-      .subscribe();
-
     // Initial load
     const loadData = async () => {
       setIsLoading(true);
       await Promise.all([fetchQuizDetails(), fetchParticipants()]);
       setIsLoading(false);
     };
-    
     loadData();
 
     // Increment waiting time
@@ -157,10 +147,9 @@ export function QuizWaitingRoom() {
     }, 1000);
 
     return () => {
-      supabase.removeChannel(channel);
       clearInterval(timer);
     };
-  }, [id, toast]);
+  }, [id, fetchParticipants, toast]);
 
   if (isLoading) {
     return (

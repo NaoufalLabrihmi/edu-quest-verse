@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -37,7 +37,9 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
   const [loadingButtons, setLoadingButtons] = useState(true);
+  const [shortAnswer, setShortAnswer] = useState('');
   const navigate = useNavigate();
+  const lastQuestionIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Restore state from localStorage
@@ -48,7 +50,6 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
         const parsed = JSON.parse(saved);
         setSelectedAnswer(parsed.selectedAnswer || null);
         setHasAnswered(parsed.hasAnswered || false);
-        setTimeLeft(parsed.timeLeft || 0);
         if (parsed.currentQuestionIndex !== undefined) {
           console.log('Restored question index from localStorage:', parsed.currentQuestionIndex);
         }
@@ -57,7 +58,6 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
       }
     }
 
-    // Force buttons to appear after a short delay to ensure rendering
     setTimeout(() => {
       setLoadingButtons(false);
     }, 1000);
@@ -80,34 +80,28 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
           setTimeLeft(newSession.time_remaining);
           setIsTimerActive(newSession.status === 'active');
           
-          // Reset state for new question
-          if (newSession.status === 'waiting') {
+          if (lastQuestionIndexRef.current !== newSession.current_question_index) {
             setSelectedAnswer(null);
             setHasAnswered(false);
             setIsAnswerCorrect(null);
             setEarnedPoints(0);
             setShowResultDialog(false);
-            setLoadingButtons(false); // Ensure buttons show on question reset
+            setLoadingButtons(false);
+            lastQuestionIndexRef.current = newSession.current_question_index;
           }
           
-          // Handle question ended - show results
           if (newSession.status === 'question_ended') {
-            // Fetch and display results
             fetchAnswerResult();
-            // Show the results dialog
             setShowResultDialog(true);
           }
           
-          // Handle quiz end
           if (newSession.status === 'ended') {
             navigate(`/quiz/${quizId}/results`);
           }
 
-          // Save current state to localStorage
           const stateToSave = {
             selectedAnswer,
             hasAnswered,
-            timeLeft: newSession.time_remaining,
             currentQuestionIndex: newSession.current_question_index,
             status: newSession.status
           };
@@ -194,54 +188,22 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
     fetchSession();
     fetchParticipantCount();
 
-    // Set up interval to keep the session alive and in sync
-    const syncInterval = setInterval(() => {
-      fetchSession();
-    }, 10000); // Sync every 10 seconds
-
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(subscription);
       broadcastSubscription.unsubscribe();
       quizStartSubscription.unsubscribe();
       participantSubscription.unsubscribe();
-      clearInterval(syncInterval);
     };
-  }, [sessionId, quizId, userId]);
+  }, [quizId, sessionId, userId, navigate]);
 
-  // Add local timer effect to match professor's implementation
+  // Timer interval: decrement timeLeft every second, but sync with server updates
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isTimerActive && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            // Time's up, show results
-            if (!showResultDialog && hasAnswered) {
-              fetchAnswerResult();
-              setShowResultDialog(true);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
+    if (!isTimerActive || timeLeft <= 0) return;
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isTimerActive, timeLeft, hasAnswered, showResultDialog]);
-
-  // Add additional effect to ensure results dialog appears when status changes
-  useEffect(() => {
-    if (session?.status === 'question_ended' && !showResultDialog) {
-      // Force show the results dialog when question ends
-      fetchAnswerResult();
-      setShowResultDialog(true);
-    }
-    
-    // Make sure buttons show when active
-    if (session?.status === 'active' && !hasAnswered) {
-      setLoadingButtons(false);
-    }
-  }, [session?.status]);
+    return () => clearInterval(interval);
+  }, [isTimerActive, timeLeft]);
 
   const fetchSession = async () => {
     console.log('Fetching session:', sessionId);
@@ -271,7 +233,6 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
     const stateToSave = {
       selectedAnswer,
       hasAnswered,
-      timeLeft: data.time_remaining,
       currentQuestionIndex: data.current_question_index,
       status: data.status
     };
@@ -309,17 +270,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
       setSelectedAnswer(answer);
       setHasAnswered(true);
       
-      console.log('Submitting answer:', {
-        session_id: sessionId,
-        question_id: currentQuestion.id,
-        participant_id: userId,
-        answer,
-        is_correct: isCorrect,
-        points_earned: points,
-        response_time: responseTime,
-      });
-
-      // Begin transaction to submit answer
+      // Submit answer using the atomic RPC (guaranteed DB update)
       const { data: answerData, error: answerError } = await supabase
         .rpc('submit_answer', {
           p_session_id: sessionId,
@@ -333,30 +284,13 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
 
       if (answerError) {
         console.error('Answer insertion error:', answerError);
-        
-        // Fallback to regular inserts if RPC fails
-        const { error: fallbackError } = await supabase
-          .from('participant_answers')
-          .insert({
-            session_id: sessionId,
-            question_id: currentQuestion.id,
-            participant_id: userId,
-            answer,
-            is_correct: isCorrect,
-            points_earned: points,
-            response_time: responseTime,
-          });
-
-        if (fallbackError) {
-          console.error('Fallback answer insertion error:', fallbackError);
-          throw fallbackError;
-        }
-        
-        // Continue with updating participants and profiles separately
-        await updatePointsManually(isCorrect, points);
+        throw answerError;
       } else {
         console.log('Answer submitted successfully with RPC', answerData);
       }
+
+      // Immediately fetch the answer and up-to-date total points to update UI
+      await fetchAnswerResult();
 
       toast({
         title: 'Answer Submitted',
@@ -373,74 +307,17 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
     }
   };
   
-  // Separate function to update points if RPC fails
-  const updatePointsManually = async (isCorrect: boolean, points: number) => {
-    if (!isCorrect) return; // Only update points for correct answers
-    
-    try {
-      // First get current total_points from participants table
-      const { data: currentData, error: fetchError } = await supabase
-        .from('quiz_participants')
-        .select('total_points')
-        .eq('session_id', sessionId)
-        .eq('user_id', userId)
-        .single();
-        
-      if (fetchError) {
-        console.error('Error fetching current points:', fetchError);
-        throw fetchError;
-      }
-      
-      // Add new points to current total
-      const currentPoints = currentData?.total_points || 0;
-      const newTotalPoints = currentPoints + points;
-      
-      // Update quiz_participants table
-      const { error: pointsError } = await supabase
-        .from('quiz_participants')
-        .update({ total_points: newTotalPoints })
-        .eq('session_id', sessionId)
-        .eq('user_id', userId);
-
-      if (pointsError) throw pointsError;
-      
-      // Also update profile table for shop integration
-      const { data: profileData, error: profileFetchError } = await supabase
-        .from('profiles')
-        .select('points')
-        .eq('id', userId)
-        .single();
-        
-      if (profileFetchError) {
-        console.error('Error fetching profile points:', profileFetchError);
-        return; // Continue even if profile update fails
-      }
-      
-      const currentProfilePoints = profileData?.points || 0;
-      const newProfilePoints = currentProfilePoints + points;
-      
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({ points: newProfilePoints })
-        .eq('id', userId);
-        
-      if (profileUpdateError) {
-        console.error('Error updating profile points:', profileUpdateError);
-      }
-      
-      // Update local state for the results dialog
-      setTotalPoints(newTotalPoints);
-    } catch (error) {
-      console.error('Error updating points:', error);
-    }
-  };
-  
   // New function to fetch answer result after question ends
   const fetchAnswerResult = async () => {
     if (!session) return;
     
     try {
       const currentQuestion = questions[session.current_question_index];
+      console.log('Fetching answer result for:', {
+        session_id: sessionId,
+        question_id: currentQuestion.id,
+        participant_id: userId
+      });
       
       // Get this student's answer for the current question
       const { data, error } = await supabase
@@ -498,36 +375,9 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
           variant: data.is_correct ? 'default' : 'destructive',
         });
       } else if (hasAnswered) {
-        // Attempt to find data by fetching again with different criteria
-        const { data: altData, error: altError } = await supabase
-          .from('participant_answers')
-          .select('*')
-          .eq('session_id', sessionId)
-          .eq('participant_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-          
-        if (!altError && altData && altData.length > 0) {
-          setIsAnswerCorrect(altData[0].is_correct);
-          setEarnedPoints(altData[0].points_earned);
-          
-          toast({
-            title: altData[0].is_correct ? 'Correct!' : 'Incorrect',
-            description: `You earned ${altData[0].points_earned} points!`,
-            variant: altData[0].is_correct ? 'default' : 'destructive',
-          });
-        } else {
-          // Handle case where no answer was found at all
-          console.log('No answer found for this question');
-          setIsAnswerCorrect(false);
-          setEarnedPoints(0);
-          
-          toast({
-            title: 'No Answer',
-            description: 'You did not submit an answer for this question',
-            variant: 'destructive',
-          });
-        }
+        // Try again after a short delay in case of race condition
+        setTimeout(fetchAnswerResult, 300);
+        return;
       } else {
         // Handle case where no answer was submitted
         console.log('No answer found for this question');
@@ -557,6 +407,9 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
 
   const currentQuestion = questions[session.current_question_index];
   const progressPercent = ((session.current_question_index + 1) / questions.length) * 100;
+
+  // Debug log for currentQuestion
+  console.log('Current question object:', currentQuestion);
   
   const closeResultDialog = () => {
     setShowResultDialog(false);
@@ -568,6 +421,15 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
       submitAnswer(option);
     }
   };
+
+  // Compute options for the current question, handling true/false fallback
+  let currentOptions = currentQuestion?.options;
+  if (
+    currentQuestion?.question_type === 'true_false' &&
+    (!Array.isArray(currentOptions) || currentOptions.length === 0)
+  ) {
+    currentOptions = ['true', 'false'];
+  }
 
   return (
     <div className="space-y-6">
@@ -600,7 +462,6 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
             {/* Question */}
             <div className="space-y-4">
               <p className="text-lg font-medium">{currentQuestion?.question_text || 'Loading question...'}</p>
-              
               <AnimatePresence mode="wait">
                 {/* Show loading indicator while buttons are initializing */}
                 {loadingButtons && (
@@ -614,16 +475,16 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                     <p className="mt-2 text-sm text-gray-500">Loading options...</p>
                   </motion.div>
                 )}
-                
-                {/* Show answer buttons */}
-                {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && currentQuestion?.options && (
+                {/* Show answer buttons or input for each question type */}
+                {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && (
+                  currentQuestion?.question_type === 'multiple_choice' && currentOptions && currentOptions.length > 0 ? (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className="grid grid-cols-2 gap-4"
                   >
-                    {currentQuestion.options.map((option: string, index: number) => (
+                      {currentOptions.map((option: string, index: number) => (
                       <Button
                         key={`option-${index}-${option}`}
                         onClick={() => handleButtonClick(option)}
@@ -641,8 +502,63 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                       </Button>
                     ))}
                   </motion.div>
+                  ) : currentQuestion?.question_type === 'true_false' && currentOptions && currentOptions.length > 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      {currentOptions.map((option: string, index: number) => (
+                        <Button
+                          key={`option-${index}-${option}`}
+                          onClick={() => handleButtonClick(option)}
+                          variant="outline"
+                          disabled={session.status === 'paused'}
+                          className={cn(
+                            "h-24 text-lg font-medium",
+                            index === 0 && "bg-red-100 hover:bg-red-200",
+                            index === 1 && "bg-blue-100 hover:bg-blue-200"
+                          )}
+                        >
+                          {option}
+                        </Button>
+                      ))}
+                    </motion.div>
+                  ) : currentQuestion?.question_type === 'short_answer' ? (
+                    <form
+                      onSubmit={e => {
+                        e.preventDefault();
+                        if (shortAnswer.trim()) handleButtonClick(shortAnswer.trim());
+                      }}
+                      className="flex flex-col items-center gap-4"
+                    >
+                      <input
+                        type="text"
+                        value={shortAnswer}
+                        onChange={e => setShortAnswer(e.target.value)}
+                        placeholder="Type your answer..."
+                        className="w-full p-3 border rounded text-lg"
+                        disabled={session.status === 'paused'}
+                        autoFocus
+                      />
+                      <Button
+                        type="submit"
+                        disabled={session.status === 'paused' || !shortAnswer.trim()}
+                        className="w-full"
+                      >
+                        Submit Answer
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="text-center text-red-500 font-semibold p-4">
+                      No answer choices available for this question.<br />
+                      Please contact your teacher or check the question setup.
+                    </div>
+                  )
                 )}
 
+                {/* Show waiting message after submitting, until question ends */}
                 {hasAnswered && session?.status !== 'question_ended' && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -651,11 +567,12 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                   >
                     <p className="text-xl font-medium">Answer Submitted</p>
                     <p className="text-sm text-gray-500">
-                      Waiting for other students...
+                      Waiting for other students or for the teacher to end the question...
                     </p>
                   </motion.div>
                 )}
 
+                {/* Only show result dialog when question ends */}
                 {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -707,7 +624,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
       </Card>
       
       {/* Results Dialog */}
-      <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+      <Dialog open={showResultDialog && session?.status === 'question_ended'} onOpenChange={setShowResultDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center">
@@ -777,6 +694,17 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Exit Quiz Button */}
+      <div className="flex justify-center mt-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/dashboard')}
+          className="w-full max-w-xs"
+        >
+          Exit Quiz
+        </Button>
+      </div>
     </div>
   );
 } 

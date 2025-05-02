@@ -253,11 +253,11 @@ export function ActiveQuiz() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
         <Navigation />
         <div className="flex flex-col items-center justify-center flex-grow gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-          <p className="text-indigo-600 font-medium mt-4">Loading quiz...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+          <p className="text-teal-600 font-medium mt-4">Loading quiz...</p>
         </div>
         <Footer />
       </div>
@@ -266,7 +266,7 @@ export function ActiveQuiz() {
 
   if (!quiz || !sessionId) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
         <Navigation />
         <div className="flex items-center justify-center flex-grow">
           <div className="text-center space-y-4">
@@ -282,7 +282,7 @@ export function ActiveQuiz() {
     }
     
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
         <Navigation />
       <main className="flex-grow container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
