@@ -267,8 +267,8 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
       // This helps reduce the delay in updating the student view
       const channel = supabase.channel('session-update');
       
-      // Broadcast a custom event with the updated session data
-      await channel.send({
+      // Send multiple broadcast attempts to ensure delivery
+      const broadcastPromise = channel.send({
         type: 'broadcast',
         event: 'session_status_changed',
         payload: {
@@ -278,6 +278,20 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
           current_question_index: session.current_question_index
         }
       });
+      
+      // Send a backup broadcast after a short delay to ensure it's received
+      setTimeout(() => {
+        channel.send({
+          type: 'broadcast',
+          event: 'session_status_changed',
+          payload: {
+            session_id: sessionId,
+            status: 'active',
+            time_remaining: timeRemaining,
+            current_question_index: session.current_question_index
+          }
+        });
+      }, 300);
       
       // Now update the session in the database
       const { data, error } = await supabase
@@ -309,6 +323,18 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
             quiz_id: quizId
           }
         });
+        
+        // Send a backup broadcast after a short delay
+        setTimeout(() => {
+          quizChannel.send({
+            type: 'broadcast',
+            event: 'quiz_started',
+            payload: {
+              session_id: sessionId,
+              quiz_id: quizId
+            }
+          });
+        }, 500);
       }
     } catch (e) {
       console.error('Unexpected error starting question:', e);
@@ -334,6 +360,20 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
           current_question_index: session.current_question_index
         }
       });
+      
+      // Send a backup broadcast
+      setTimeout(() => {
+        channel.send({
+          type: 'broadcast',
+          event: 'session_status_changed',
+          payload: {
+            session_id: sessionId,
+            status: 'paused',
+            time_remaining: timeLeft,
+            current_question_index: session.current_question_index
+          }
+        });
+      }, 300);
     
       // Now update the status while preserving all other settings
       const { error } = await supabase
@@ -388,6 +428,20 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
           current_question_index: session.current_question_index
         }
       });
+      
+      // Send a backup broadcast
+      setTimeout(() => {
+        channel.send({
+          type: 'broadcast',
+          event: 'session_status_changed',
+          payload: {
+            session_id: sessionId,
+            status: 'question_ended',
+            time_remaining: 0,
+            current_question_index: session.current_question_index
+          }
+        });
+      }, 300);
     
       const { error } = await supabase
         .from('quiz_sessions')

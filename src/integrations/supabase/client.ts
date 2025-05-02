@@ -8,13 +8,33 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Missing Supabase environment variables');
 }
-console.log('SUPABASE_URL:');
-console.log('SUPABASE_PUBLISHABLE_KEY:');
+console.log('Initializing Supabase client');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,  // Increase events processing limit
+    }
+  },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
+
+// Test connection on load
+(async () => {
+  try {
+    const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+    console.log('Supabase connection test:', error ? 'Failed' : 'Success');
+    if (error) console.error('Connection error:', error);
+  } catch (e) {
+    console.error('Supabase initialization error:', e);
+  }
+})();
 
 export interface QuizSession {
   id: string;

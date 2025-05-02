@@ -36,6 +36,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
   const [participantCount, setParticipantCount] = useState(0);
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [loadingButtons, setLoadingButtons] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +56,11 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
         console.error('Error parsing localStorage data:', e);
       }
     }
+
+    // Force buttons to appear after a short delay to ensure rendering
+    setTimeout(() => {
+      setLoadingButtons(false);
+    }, 1000);
 
     // Subscribe to session updates
     const subscription = supabase
@@ -81,6 +87,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
             setIsAnswerCorrect(null);
             setEarnedPoints(0);
             setShowResultDialog(false);
+            setLoadingButtons(false); // Ensure buttons show on question reset
           }
           
           // Handle question ended - show results
@@ -129,6 +136,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
             setSession(updatedSession);
             setTimeLeft(payload.payload.time_remaining);
             setIsTimerActive(payload.payload.status === 'active');
+            setLoadingButtons(false); // Ensure buttons show when status changes
             
             // Show result dialog if question ended
             if (payload.payload.status === 'question_ended') {
@@ -159,6 +167,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
         console.log('Received quiz started event:', payload);
         // Force refresh session data when quiz starts
         fetchSession();
+        setLoadingButtons(false); // Force buttons to show on quiz start
       })
       .subscribe((status) => {
         console.log('Quiz start subscription status:', status);
@@ -226,6 +235,11 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
       // Force show the results dialog when question ends
       fetchAnswerResult();
       setShowResultDialog(true);
+    }
+    
+    // Make sure buttons show when active
+    if (session?.status === 'active' && !hasAnswered) {
+      setLoadingButtons(false);
     }
   }, [session?.status]);
 
@@ -548,17 +562,24 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
     setShowResultDialog(false);
   };
 
+  // Button click handling
+  const handleButtonClick = (option: string) => {
+    if (session?.status === 'active') {
+      submitAnswer(option);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Question {session.current_question_index + 1}</span>
+            <span>Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'}</span>
             <Badge variant="secondary">
-              {session.status === 'waiting' ? 'Waiting' : 
-               session.status === 'active' ? 'Active' :
-               session.status === 'paused' ? 'Paused' :
-               session.status === 'question_ended' ? "Time's Up!" : 'Ended'}
+              {session?.status === 'waiting' ? 'Waiting' : 
+               session?.status === 'active' ? 'Active' :
+               session?.status === 'paused' ? 'Paused' :
+               session?.status === 'question_ended' ? "Time's Up!" : 'Ended'}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -573,15 +594,29 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                 </div>
                 <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
               </div>
-              <Progress value={(timeLeft / currentQuestion.time_limit) * 100} />
+              <Progress value={(timeLeft / (currentQuestion?.time_limit || 1)) * 100} />
             </div>
 
             {/* Question */}
             <div className="space-y-4">
-              <p className="text-lg font-medium">{currentQuestion.question_text}</p>
+              <p className="text-lg font-medium">{currentQuestion?.question_text || 'Loading question...'}</p>
               
               <AnimatePresence mode="wait">
-                {(session.status === 'active' || session.status === 'paused') && !hasAnswered && (
+                {/* Show loading indicator while buttons are initializing */}
+                {loadingButtons && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center p-8"
+                  >
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                    <p className="mt-2 text-sm text-gray-500">Loading options...</p>
+                  </motion.div>
+                )}
+                
+                {/* Show answer buttons */}
+                {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && currentQuestion?.options && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -591,7 +626,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                     {currentQuestion.options.map((option: string, index: number) => (
                       <Button
                         key={`option-${index}-${option}`}
-                        onClick={() => session.status === 'active' ? submitAnswer(option) : null}
+                        onClick={() => handleButtonClick(option)}
                         variant="outline"
                         disabled={session.status === 'paused'}
                         className={cn(
@@ -608,7 +643,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                   </motion.div>
                 )}
 
-                {hasAnswered && session.status !== 'question_ended' && (
+                {hasAnswered && session?.status !== 'question_ended' && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -621,7 +656,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                   </motion.div>
                 )}
 
-                {hasAnswered && session.status === 'question_ended' && isAnswerCorrect !== null && (
+                {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -642,7 +677,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                         {isAnswerCorrect ? `You earned ${earnedPoints} points` : 'No points earned'}
                       </p>
                       <p className="text-sm text-gray-500 mt-2">
-                        Correct answer: {currentQuestion.correct_answer}
+                        Correct answer: {currentQuestion?.correct_answer}
                       </p>
                     </div>
                   </motion.div>
@@ -679,7 +714,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
               Question Results
             </DialogTitle>
             <DialogDescription className="text-center">
-              Question {session.current_question_index + 1} of {questions.length}
+              Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'} of {questions.length}
             </DialogDescription>
           </DialogHeader>
           
@@ -707,7 +742,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
                 
                 <div className="mt-2 text-center">
                   <p className="text-gray-600">
-                    Correct answer: {currentQuestion.correct_answer}
+                    Correct answer: {currentQuestion?.correct_answer}
                   </p>
                   {hasAnswered && (
                     <p className="text-gray-600">
@@ -729,7 +764,7 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
               <div className="text-center">
                 <p className="text-lg">No answer submitted</p>
                 <p className="text-gray-600 mt-2">
-                  Correct answer: {currentQuestion.correct_answer}
+                  Correct answer: {currentQuestion?.correct_answer}
                 </p>
               </div>
             )}
