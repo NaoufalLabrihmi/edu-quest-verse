@@ -69,23 +69,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let ignore = false;
     checkAuth();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (ignore) return;
       setUser(session?.user ?? null);
       if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            setProfile(data || null);
-          });
+        if (!profile || profile.id !== session.user.id) {
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data }) => {
+              setProfile(data || null);
+            });
+        }
       } else {
         setProfile(null);
       }
     });
-    return () => subscription.unsubscribe();
+    return () => { ignore = true; subscription.unsubscribe(); };
   }, []);
 
   const signIn = async (email: string, password: string) => {

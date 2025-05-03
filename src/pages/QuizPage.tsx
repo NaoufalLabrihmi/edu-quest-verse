@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Edit, Trash, Copy, Users, Play, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Edit, Trash, Copy, Users, Play, Clock, CheckCircle, Rocket, ChevronDown, Lock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -41,6 +41,62 @@ interface Participant {
   status: string;
   joined_at: string;
   username: string;
+}
+
+// Helper: Collapsible Question Card
+function QuestionAccordion({ question, index }: { question: Question, index: number }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="mb-4">
+      <button
+        className="w-full flex justify-between items-center px-6 py-4 bg-gradient-to-r from-cyan-900/80 to-blue-900/80 border border-cyan-800/60 rounded-2xl shadow-xl hover:scale-[1.01] hover:shadow-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={`question-content-${question.id}`}
+      >
+        <span className="flex items-center text-xl font-bold text-white">
+          Question {index + 1}: <span className="ml-2 text-cyan-200 font-normal">{question.question_text}</span>
+        </span>
+        <span className="flex items-center space-x-2">
+          <Badge className="bg-cyan-500/10 text-cyan-300">
+            {question.points * (question.point_multiplier || 1)} {question.points * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}
+            {question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}
+          </Badge>
+          <Badge className="bg-blue-500/10 text-blue-300">{question.time_limit}s</Badge>
+          <ChevronDown className={`ml-2 h-5 w-5 text-cyan-300 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </span>
+      </button>
+      <div
+        id={`question-content-${question.id}`}
+        className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-96 py-4 px-6' : 'max-h-0 py-0 px-6'}`}
+        style={{ background: open ? 'rgba(22, 78, 99, 0.7)' : 'transparent', borderRadius: '0 0 1rem 1rem' }}
+        aria-hidden={!open}
+      >
+        {question.question_type === 'multiple_choice' && (
+          <div className="space-y-2">
+            {question.options.map((option, i) => (
+              <div
+                key={i}
+                className={`p-2 rounded-lg border ${option === question.correct_answer ? 'bg-green-500/10 text-green-300 border-green-400' : 'bg-gray-800 text-cyan-100 border-cyan-700'}`}
+              >
+                {option}
+              </div>
+            ))}
+          </div>
+        )}
+        {question.question_type === 'true_false' && (
+          <div className="p-2 rounded-lg bg-green-500/10 text-cyan-100 font-semibold border border-green-400">
+            Correct answer: <span className="text-green-300">{question.correct_answer}</span>
+          </div>
+        )}
+        {question.question_type === 'short_answer' && (
+          <div className="p-2 rounded-lg bg-green-500/10 text-cyan-100 font-semibold border border-green-400">
+            Expected answer: <span className="text-green-300">{question.correct_answer}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const QuizPage = () => {
@@ -279,12 +335,53 @@ const QuizPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark relative overflow-x-hidden">
+        {/* Animated blobs and grid overlay */}
+        <svg width="100%" height="100%" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full z-0" preserveAspectRatio="none">
+          <circle cx="400" cy="400" r="300" fill="url(#grad1)" className="animate-blob1 blur-3xl opacity-60" />
+          <circle cx="1600" cy="300" r="250" fill="url(#grad2)" className="animate-blob2 blur-3xl opacity-50" />
+          <circle cx="1000" cy="800" r="220" fill="url(#grad3)" className="animate-blob3 blur-2xl opacity-40" />
+          <defs>
+            <radialGradient id="grad1" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+              <stop stopColor="#06b6d4" />
+              <stop offset="1" stopColor="#0ea5e9" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="grad2" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+              <stop stopColor="#818cf8" />
+              <stop offset="1" stopColor="#a21caf" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="grad3" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+              <stop stopColor="#22d3ee" />
+              <stop offset="1" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+        </svg>
+        <svg width="100%" height="100%" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full z-10" preserveAspectRatio="none">
+          <g className="animate-gridwave" style={{ opacity: 0.10 }}>
+            {[...Array(32)].map((_, i) => (
+              <line key={i} x1={i * 60} y1="0" x2={i * 60} y2="1080" stroke="#67e8f9" strokeWidth="1" />
+            ))}
+            {[...Array(19)].map((_, i) => (
+              <line key={i} x1="0" y1={i * 60} x2="1920" y2={i * 60} stroke="#818cf8" strokeWidth="1" />
+            ))}
+          </g>
+          <style>{`
+            @keyframes gridwave { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+            .animate-gridwave{animation:gridwave 16s ease-in-out infinite;}
+            @keyframes blob1 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(80px,40px) scale(1.1);} 66%{transform:translate(-60px,-30px) scale(0.95);} }
+            @keyframes blob2 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(-100px,60px) scale(1.05);} 66%{transform:translate(120px,-40px) scale(0.9);} }
+            @keyframes blob3 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(60px,-80px) scale(1.08);} 66%{transform:translate(-90px,50px) scale(0.92);} }
+            .animate-blob1{animation:blob1 18s ease-in-out infinite;}
+            .animate-blob2{animation:blob2 22s ease-in-out infinite;}
+            .animate-blob3{animation:blob3 20s ease-in-out infinite;}
+          `}</style>
+        </svg>
         <Navigation />
-        <main className="flex-grow py-8">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
-            <p className="mt-4 text-gray-400">Loading quiz...</p>
+        <main className="flex-grow py-8 relative z-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="mb-8 text-center relative">
+              <span className="text-3xl font-bold text-cyan-300">Loading quiz...</span>
+            </div>
           </div>
         </main>
         <Footer />
@@ -310,111 +407,155 @@ const QuizPage = () => {
   const isCreator = user?.id === quiz.created_by;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark relative overflow-x-hidden">
+      {/* Animated blobs and grid overlay */}
+      <svg width="100%" height="100%" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full z-0" preserveAspectRatio="none">
+        <circle cx="400" cy="400" r="300" fill="url(#grad1)" className="animate-blob1 blur-3xl opacity-60" />
+        <circle cx="1600" cy="300" r="250" fill="url(#grad2)" className="animate-blob2 blur-3xl opacity-50" />
+        <circle cx="1000" cy="800" r="220" fill="url(#grad3)" className="animate-blob3 blur-2xl opacity-40" />
+        <defs>
+          <radialGradient id="grad1" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+            <stop stopColor="#06b6d4" />
+            <stop offset="1" stopColor="#0ea5e9" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="grad2" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+            <stop stopColor="#818cf8" />
+            <stop offset="1" stopColor="#a21caf" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="grad3" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+            <stop stopColor="#22d3ee" />
+            <stop offset="1" stopColor="#0e7490" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+      </svg>
+      <svg width="100%" height="100%" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full z-10" preserveAspectRatio="none">
+        <g className="animate-gridwave" style={{ opacity: 0.10 }}>
+          {[...Array(32)].map((_, i) => (
+            <line key={i} x1={i * 60} y1="0" x2={i * 60} y2="1080" stroke="#67e8f9" strokeWidth="1" />
+          ))}
+          {[...Array(19)].map((_, i) => (
+            <line key={i} x1="0" y1={i * 60} x2="1920" y2={i * 60} stroke="#818cf8" strokeWidth="1" />
+          ))}
+        </g>
+        <style>{`
+          @keyframes gridwave { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+          .animate-gridwave{animation:gridwave 16s ease-in-out infinite;}
+          @keyframes blob1 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(80px,40px) scale(1.1);} 66%{transform:translate(-60px,-30px) scale(0.95);} }
+          @keyframes blob2 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(-100px,60px) scale(1.05);} 66%{transform:translate(120px,-40px) scale(0.9);} }
+          @keyframes blob3 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(60px,-80px) scale(1.08);} 66%{transform:translate(-90px,50px) scale(0.92);} }
+          .animate-blob1{animation:blob1 18s ease-in-out infinite;}
+          .animate-blob2{animation:blob2 22s ease-in-out infinite;}
+          .animate-blob3{animation:blob3 20s ease-in-out infinite;}
+        `}</style>
+      </svg>
       <Navigation />
-      <main className="flex-grow py-8">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text">
+      <main className="flex-grow py-8 relative z-20">
+        <div className="container mx-auto px-4 max-w-6xl">
+          {/* Big Quiz Info Card at the top (now more compact and premium) */}
+          <div className="w-full mb-8">
+            <div className="bg-gradient-to-br from-cyan-900/80 to-blue-900/80 shadow-2xl rounded-2xl p-6 border border-cyan-700/60 animate-fade-in flex flex-col items-center justify-center backdrop-blur-md bg-opacity-80 ring-1 ring-cyan-400/10">
+              <div className="flex flex-col items-center gap-3 w-full">
+                <div className="flex items-center gap-3 w-full justify-center">
+                  <Rocket className="h-7 w-7 text-cyan-400 animate-float" />
+                  <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text drop-shadow-lg text-center">
               {quiz.title}
             </h1>
-            <div className="flex items-center justify-center space-x-4">
-              <Badge className={getStatusColor(quiz.status)}>
+                  <Badge className={getStatusColor(quiz.status) + ' text-base px-4 py-1.5 rounded-full shadow-lg animate-fade-in ml-4'}>
                 {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
               </Badge>
-              <div className="flex items-center text-cyan-300">
-                <span className="mr-2">Access Code:</span>
-                <span className="font-mono mr-2">{quiz.access_code}</span>
+                </div>
+                <div className="w-full border-t border-cyan-700/40 my-3"></div>
+                <div className="flex flex-col items-center">
+                  <span className="uppercase text-cyan-300 tracking-widest text-base font-semibold mb-1">Access Code</span>
+                  <div className="flex items-center bg-cyan-900/60 px-6 py-3 rounded-xl shadow-lg border border-cyan-700 transition-transform duration-200 hover:scale-105 hover:shadow-2xl">
+                    <span className="font-mono text-2xl sm:text-3xl text-white tracking-widest select-all mr-3">{quiz.access_code}</span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-cyan-400 hover:text-white"
+                      className="h-9 w-9 text-cyan-400 hover:text-white"
                   onClick={() => handleCopyCode(quiz.access_code)}
+                      aria-label="Copy access code"
                 >
-                  <Copy className="h-4 w-4" />
+                      <Copy className="h-6 w-6" />
                 </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Professor Control Panel - Only shown to the quiz creator */}
-          {isCreator && (
-            <Card className="bg-gradient-to-br from-cyan-950 to-blue-950 shadow-xl rounded-2xl p-6 mb-8 border border-cyan-800/70">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-white">Professor Control Panel</CardTitle>
-              </CardHeader>
-              <CardContent>
+          {/* Two-column grid: Participants (left, wider), Description (right, narrower) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+            {/* Left: Participants (wider) */}
+            <div className="md:col-span-7">
+              <div className="bg-gradient-to-br from-cyan-950/90 via-blue-950/90 to-cyan-900/90 shadow-2xl rounded-3xl p-8 border-2 border-transparent bg-clip-padding bg-gradient-to-r from-cyan-400/30 via-blue-400/20 to-teal-400/30 animate-fade-in ring-2 ring-cyan-400/20 mb-8">
                 <Tabs defaultValue="participants">
-                  <TabsList className="bg-cyan-950 border border-cyan-800">
-                    <TabsTrigger value="participants">Participants</TabsTrigger>
-                    <TabsTrigger value="controls">Quiz Controls</TabsTrigger>
+                  <TabsList className="bg-cyan-950/80 border border-cyan-800 rounded-xl mb-4">
+                    <TabsTrigger value="participants" className="text-white font-semibold">Participants</TabsTrigger>
+                    <TabsTrigger value="controls" className="text-white font-semibold">Quiz Controls</TabsTrigger>
                   </TabsList>
-                  
                   <TabsContent value="participants" className="mt-4">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-cyan-300 flex items-center">
-                          <Users className="h-5 w-5 mr-2" />
+                        <h3 className="text-lg font-bold text-white flex items-center">
+                          <Users className="h-5 w-5 mr-2 text-cyan-300" />
                           Participants
                         </h3>
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={fetchParticipants}
-                          className="text-cyan-300 border-cyan-600 hover:bg-cyan-800"
+                          className="text-white border-cyan-400 hover:bg-cyan-800/60 hover:text-cyan-200"
                         >
                           Refresh
                         </Button>
                       </div>
-                      
                       {loadingParticipants ? (
                         <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
                         </div>
                       ) : participants.length > 0 ? (
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                           {participants.map((participant) => (
                             <div 
                               key={participant.id} 
-                              className="flex items-center justify-between p-3 bg-cyan-800/40 rounded-lg border border-cyan-700"
+                              className="flex items-center justify-between p-3 bg-cyan-800/40 rounded-lg border border-cyan-700 hover:bg-cyan-700/60 transition-all duration-150"
                             >
                               <div className="flex items-center">
-                                <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center text-white font-semibold">
+                                <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center text-white font-bold text-lg shadow">
                                   {participant.username.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="ml-3 font-medium text-white">{participant.username}</span>
+                                <span className="ml-3 font-bold text-white text-lg">{participant.username}</span>
                               </div>
-                              <span className="text-sm text-cyan-300 flex items-center">
-                                <Clock className="h-3 w-3 mr-1" />
+                              <span className="text-sm text-cyan-100 flex items-center">
+                                <Clock className="h-3 w-3 mr-1 text-cyan-300" />
                                 {new Date(participant.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-4 text-cyan-300">
+                        <div className="text-center py-4 text-cyan-100">
                           No participants have joined yet
                         </div>
                       )}
                     </div>
                   </TabsContent>
-                  
                   <TabsContent value="controls" className="mt-4">
                     <div className="space-y-4">
-                      <div className="p-4 bg-cyan-800/40 rounded-lg border border-cyan-700">
-                        <h3 className="font-semibold text-lg text-white mb-2">Start Quiz</h3>
-                        <p className="text-cyan-300 mb-4">
+                      <div className="p-4 bg-cyan-800/40 rounded-xl border border-cyan-700">
+                        <h3 className="font-bold text-xl text-white mb-2">Start Quiz</h3>
+                        <p className="text-cyan-100 mb-4">
                           Start the quiz for all participants. Everyone in the waiting room will be redirected to the quiz automatically.
                         </p>
                         <div className="flex items-center justify-between">
-                          <div className="text-cyan-300 flex items-center">
-                            <Users className="h-4 w-4 mr-2" />
+                          <div className="text-cyan-100 flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-cyan-300" />
                             {participants.length} participants ready
                           </div>
                           <Button 
                             onClick={handleStartQuiz}
                             disabled={startingQuiz || participants.length === 0}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold"
                           >
                             {startingQuiz ? (
                               <>
@@ -430,29 +571,27 @@ const QuizPage = () => {
                           </Button>
                         </div>
                       </div>
-                      
-                      <div className="p-4 bg-cyan-800/40 rounded-lg border border-cyan-700">
-                        <h3 className="font-semibold text-lg text-white mb-2">Quiz Settings</h3>
+                      <div className="p-4 bg-cyan-800/40 rounded-xl border border-cyan-700">
+                        <h3 className="font-bold text-xl text-white mb-2">Quiz Settings</h3>
                         <div className="space-y-4">
-                          <div className="flex justify-between items-center text-cyan-300">
+                          <div className="flex justify-between items-center text-cyan-100">
                             <span>Quiz Status:</span>
-                            <Badge className={getStatusColor(quiz.status)}>
+                            <Badge className={getStatusColor(quiz.status) + ' text-white'}>
                               {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
                             </Badge>
                           </div>
-                          <div className="flex justify-between items-center text-cyan-300">
+                          <div className="flex justify-between items-center text-cyan-100">
                             <span>Questions:</span>
                             <span>{quiz.questions.length}</span>
                           </div>
-                          <div className="flex justify-between items-center text-cyan-300">
+                          <div className="flex justify-between items-center text-cyan-100">
                             <span>Total Points:</span>
                             <span>{quiz.questions.reduce((sum, q) => sum + q.points, 0)}</span>
                           </div>
-                          
                           {quiz.status === 'draft' && (
                             <Button 
                               onClick={handlePublishQuiz}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
+                              className="w-full bg-green-600 hover:bg-green-700 text-white mt-2 font-bold"
                             >
                               Publish Quiz
                             </Button>
@@ -462,83 +601,48 @@ const QuizPage = () => {
                     </div>
                   </TabsContent>
                 </Tabs>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t border-cyan-800 pt-4">
+                <div className="flex justify-between border-t border-cyan-800 pt-4 mt-6">
                 <Button 
                   variant="outline" 
-                  className="text-cyan-300 border-cyan-600 hover:bg-cyan-800"
+                    className="text-white border-cyan-400 hover:bg-cyan-800/60 hover:text-cyan-200 font-bold"
                   onClick={() => navigate(`/edit-quiz/${quiz.id}`)}
                 >
                   <Edit className="h-4 w-4 mr-2" /> Edit Quiz
                 </Button>
                 <Button 
-                  className="bg-cyan-600 hover:bg-cyan-700"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
                   onClick={() => navigate('/quizzes')}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" /> Done
                 </Button>
-              </CardFooter>
-            </Card>
-          )}
-
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-6 mb-8 border border-cyan-800/60">
-            <h2 className="text-2xl font-bold mb-4 text-cyan-300">Description</h2>
-            <p className="text-cyan-200">{quiz.description || 'No description provided'}</p>
+                </div>
+              </div>
+            </div>
+            {/* Right: Description (narrower) */}
+            <div className="md:col-span-5">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-5 border border-cyan-800/60 animate-fade-in">
+                <h2 className="text-lg font-bold mb-3 text-cyan-300 flex items-center">
+                  <Rocket className="h-5 w-5 mr-2 text-cyan-400 animate-float" /> Description
+                </h2>
+                <p className="text-cyan-200 text-base">{quiz.description || 'No description provided'}</p>
+              </div>
+            </div>
           </div>
-
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-4 text-cyan-300">Questions ({quiz.questions.length})</h2>
-            {quiz.questions.sort((a, b) => a.order_number - b.order_number).map((question, index) => (
-              <Card key={question.id} className="overflow-hidden bg-gray-900 border border-cyan-800/60">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl font-bold text-white">
-                      Question {index + 1}
-                    </CardTitle>
-                    <div className="flex items-center space-x-2">
-                      <Badge className="bg-cyan-500/10 text-cyan-300">
-                        {question.points * (question.point_multiplier || 1)} {question.points * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}
-                        {question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}
-                      </Badge>
-                      <Badge className="bg-blue-500/10 text-blue-300">
-                        {question.time_limit}s
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p className="text-cyan-200">{question.question_text}</p>
-                    {question.question_type === 'multiple_choice' && (
-                      <div className="space-y-2">
-                        {question.options.map((option, i) => (
-                          <div
-                            key={i}
-                            className={`p-2 rounded ${
-                              option === question.correct_answer
-                                ? 'bg-green-500/10 text-green-300'
-                                : 'bg-gray-800 text-cyan-100'
-                            }`}
-                          >
-                            {option}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {question.question_type === 'true_false' && (
-                      <div className="p-2 rounded bg-green-500/10 text-cyan-100 font-semibold">
-                        Correct answer: <span className="text-green-300">{question.correct_answer}</span>
-                      </div>
-                    )}
-                    {question.question_type === 'short_answer' && (
-                      <div className="p-2 rounded bg-green-500/10 text-cyan-100 font-semibold">
-                        Expected answer: <span className="text-green-300">{question.correct_answer}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Questions section full width below */}
+          <div className="space-y-8 mt-10">
+            <h2 className="text-2xl font-bold mb-4 text-cyan-300 flex items-center">
+              Questions ({quiz.questions.length})
+              <Lock className="ml-2 h-5 w-5 text-cyan-400" />
+            </h2>
+            <div className="rounded-xl bg-cyan-950/60 p-4 border border-cyan-800/40">
+              <p className="text-cyan-200 mb-4 text-sm flex items-center">
+                <Lock className="h-4 w-4 mr-1 text-cyan-400" />
+                Questions are hidden by default. Click a question to view its options/answers. This prevents students from seeing answers if the teacher accidentally shares the screen.
+              </p>
+              {quiz.questions.sort((a, b) => a.order_number - b.order_number).map((question, index) => (
+                <QuestionAccordion key={question.id} question={question} index={index} />
+              ))}
+            </div>
           </div>
         </div>
       </main>

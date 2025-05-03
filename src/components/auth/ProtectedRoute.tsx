@@ -58,9 +58,15 @@ export const ProtectedRoute = ({
 
   if (loading || !initialized || !profileLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin w-8 h-8 text-purple-500" />
-        <span className="ml-3 text-lg text-gray-600">Loading...</span>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-cyan-900 via-blue-950 to-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-gradient-to-br from-cyan-700/30 to-blue-900/0 rounded-full blur-3xl animate-fade-in" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-gradient-to-tr from-blue-800/30 to-cyan-900/0 rounded-full blur-3xl animate-fade-in-slow" />
+        </div>
+        <div className="relative z-10 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-cyan-400 border-b-4 border-blue-500 shadow-cyan-glow mb-8" />
+          <span className="text-3xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-teal-200 text-transparent bg-clip-text drop-shadow-lg animate-gradient-x">Loading...</span>
+        </div>
       </div>
     );
   }

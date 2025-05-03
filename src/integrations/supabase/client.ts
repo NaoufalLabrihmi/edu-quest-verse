@@ -8,7 +8,6 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Missing Supabase environment variables');
 }
-console.log('Initializing Supabase client');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -29,10 +28,10 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 (async () => {
   try {
     const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
-    console.log('Supabase connection test:', error ? 'Failed' : 'Success');
-    if (error) console.error('Connection error:', error);
+    // console.log('Supabase connection test:', error ? 'Failed' : 'Success');
+    // if (error) console.error('Connection error:', error);
   } catch (e) {
-    console.error('Supabase initialization error:', e);
+    // console.error('Supabase initialization error:', e);
   }
 })();
 

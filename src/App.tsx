@@ -9,8 +9,6 @@ import { AuthProvider } from "@/lib/auth/auth-context";
 import Index from "./pages/Index";
 import ConfirmEmail from "./pages/auth/ConfirmEmail";
 import Dashboard from "./pages/Dashboard";
-import StudentDashboard from "./pages/StudentDashboard";
-import ProfessorDashboard from "./pages/ProfessorDashboard";
 import CreateQuiz from "./pages/CreateQuiz";
 import ShopPage from "./pages/ShopPage";
 import ForumPage from "./pages/ForumPage";
@@ -53,22 +51,6 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student-dashboard"
-              element={
-                <ProtectedRoute requireAuth>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/professor-dashboard"
-              element={
-                <ProtectedRoute requireAuth>
-                  <ProfessorDashboard />
                 </ProtectedRoute>
               }
             />

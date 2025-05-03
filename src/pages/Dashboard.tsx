@@ -9,13 +9,11 @@ const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect to role-specific dashboard
+  // Only allow admin dashboard, otherwise redirect to login
   if (profile?.role === 'admin') {
     return <Navigate to="/dashboard_admin" replace />;
-  } else if (profile?.role === 'student') {
-    return <Navigate to="/student-dashboard" replace />;
   } else {
-    return <Navigate to="/professor-dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
 };
 

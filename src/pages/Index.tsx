@@ -61,51 +61,51 @@ const SignupModal: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
       <button
         type="button"
         aria-label="Close"
-        className="absolute top-2 right-2 text-gray-400 hover:text-white p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="absolute top-2 right-2 text-gray-400 hover:text-white p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500"
         onClick={onSuccess}
       >
         <X className="w-5 h-5" />
       </button>
       <div className="flex justify-center mb-3">
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-purple-700 via-purple-500 to-purple-700 rounded-full blur-lg opacity-60"></div>
-          <div className="relative bg-gray-900 rounded-full p-2 border-2 border-purple-700">
-            <GraduationCap className="h-8 w-8 text-purple-400" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-700 via-cyan-500 to-blue-700 rounded-full blur-lg opacity-60"></div>
+          <div className="relative bg-gray-900 rounded-full p-2 border-2 border-cyan-700">
+            <GraduationCap className="h-8 w-8 text-cyan-400" />
           </div>
         </div>
       </div>
-      <h2 className="text-xl font-extrabold text-center mb-2 text-purple-100">Create your account</h2>
+      <h2 className="text-xl font-extrabold text-center mb-2 text-cyan-100">Create your account</h2>
       <form onSubmit={handleSubmit} className="space-y-4 w-full">
         <div className="space-y-1">
-          <Label htmlFor="username" className="text-purple-200">Username</Label>
+          <Label htmlFor="username" className="text-cyan-200">Username</Label>
           <Input
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-purple-500 text-base"
+            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-cyan-500 text-base"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="email" className="text-purple-200">Email</Label>
+          <Label htmlFor="email" className="text-cyan-200">Email</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-purple-500 text-base"
+            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-cyan-500 text-base"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="password" className="text-purple-200">Password</Label>
+          <Label htmlFor="password" className="text-cyan-200">Password</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-purple-500 text-base"
+            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-cyan-500 text-base"
           />
         </div>
         <div className="space-y-1">
@@ -176,46 +176,46 @@ const LoginModal: React.FC<{ onSuccess: () => void; showLoading: () => void }> =
       <button
         type="button"
         aria-label="Close"
-        className="absolute top-2 right-2 text-gray-400 hover:text-white p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="absolute top-2 right-2 text-gray-400 hover:text-white p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500"
         onClick={onSuccess}
       >
         <X className="w-5 h-5" />
       </button>
       <div className="flex justify-center mb-3">
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-purple-700 via-purple-500 to-purple-700 rounded-full blur-lg opacity-60"></div>
-          <div className="relative bg-gray-900 rounded-full p-2 border-2 border-purple-700">
-            <GraduationCap className="h-8 w-8 text-purple-400" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-700 via-cyan-500 to-blue-700 rounded-full blur-lg opacity-60"></div>
+          <div className="relative bg-gray-900 rounded-full p-2 border-2 border-cyan-700">
+            <GraduationCap className="h-8 w-8 text-cyan-400" />
           </div>
         </div>
       </div>
-      <h2 className="text-xl font-extrabold text-center mb-2 text-purple-100">Sign in to your account</h2>
+      <h2 className="text-xl font-extrabold text-center mb-2 text-cyan-100">Sign in to your account</h2>
       <form onSubmit={handleSubmit} className="space-y-4 w-full">
         <div className="space-y-1">
-          <Label htmlFor="login-email" className="text-purple-200">Email</Label>
+          <Label htmlFor="login-email" className="text-cyan-200">Email</Label>
           <Input
             id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-purple-500 text-base"
+            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-cyan-500 text-base"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="login-password" className="text-purple-200">Password</Label>
+          <Label htmlFor="login-password" className="text-cyan-200">Password</Label>
           <Input
             id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-purple-500 text-base"
+            className="bg-gray-950 border border-gray-800 text-white placeholder-gray-500 focus:border-cyan-500 text-base"
           />
         </div>
         <Button
           type="submit"
-          className="w-full bg-purple-700 hover:bg-purple-800 text-base font-bold border-0 shadow-md py-2"
+          className="w-full bg-cyan-700 hover:bg-cyan-800 text-base font-bold border-0 shadow-md py-2"
           disabled={loading}
         >
           {loading ? 'Signing in...' : 'Sign in'}
@@ -234,7 +234,6 @@ const overlayStyles = `
 `;
 
 const Index = () => {
-  const [enteredCode, setEnteredCode] = useState('');
   const [signupOpen, setSignupOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -245,12 +244,6 @@ const Index = () => {
   const showLoading = () => {
     setShowLoadingOverlay(true);
     setTimeout(() => setShowLoadingOverlay(false), 1500);
-  };
-
-  const handleJoinQuiz = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would verify the quiz code and navigate to the quiz
-    console.log('Joining quiz with code:', enteredCode);
   };
 
   // Add a handler for logout that resets UI and opens login modal
@@ -270,7 +263,7 @@ const Index = () => {
   return (
     <>
       <style>{overlayStyles}</style>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
         {/* Loading Overlay */}
         {showLoadingOverlay && (
           <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md transition-opacity duration-500 animate-fadeIn">
@@ -288,26 +281,45 @@ const Index = () => {
           <>
             <Navigation />
             <main className="flex-grow">
-              {/* Hero Section */}
-              <section className="hero-gradient py-20 md:py-28">
-                <div className="container mx-auto px-4 text-center">
-                  <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                    Learn, Quiz, Earn Rewards
-                  </h1>
-                  <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-10">
-                    Join EduQuestVerse - the interactive learning platform where knowledge earns rewards. 
-                    Create quizzes, earn points, and participate in meaningful educational discussions.
+              {/* Hero Section - visually stunning dark mode with animated icon and dynamic background */}
+              <section className="relative py-24 md:py-36 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 overflow-hidden">
+                {/* Animated background: gradient blobs and floating shapes for competition energy */}
+                <div className="absolute inset-0 pointer-events-none z-0">
+                  {/* Animated gradient blobs */}
+                  <div className="absolute left-1/3 top-0 w-[60vw] h-[60vw] bg-gradient-to-br from-cyan-500/30 via-blue-500/20 to-teal-400/20 rounded-full blur-3xl opacity-70 animate-blob-move" />
+                  <div className="absolute right-0 top-1/4 w-[40vw] h-[40vw] bg-gradient-to-br from-yellow-400/20 via-pink-400/10 to-cyan-400/10 rounded-full blur-2xl opacity-40 animate-blob-move2" />
+                  {/* Animated floating lines */}
+                  <svg className="absolute left-0 bottom-0 w-full h-32 opacity-30 animate-float-lines" viewBox="0 0 1440 320"><path fill="#22d3ee" fillOpacity="0.2" d="M0,160L60,170.7C120,181,240,203,360,197.3C480,192,600,160,720,133.3C840,107,960,85,1080,101.3C1200,117,1320,171,1380,197.3L1440,224L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path></svg>
+                  {/* Confetti for competition */}
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    {[...Array(18)].map((_, i) => (
+                      <span key={i} className={`absolute w-2 h-2 rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 opacity-70 animate-confetti${i % 3 + 1}`} style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} />
+                    ))}
+                  </div>
+                </div>
+                <div className="container mx-auto px-4 relative z-10 text-center flex flex-col items-center">
+                  <div className="mb-6 animate-bounce-slow">
+                    <GraduationCap className="w-20 h-20 text-cyan-400 drop-shadow-cyan-glow" />
+                  </div>
+                  <h1 className="text-5xl md:text-7xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text drop-shadow-cyan-glow animate-fadeIn">Brain Boost</h1>
+                  <p className="text-2xl md:text-3xl font-semibold text-cyan-100 mb-6 max-w-2xl mx-auto animate-slideUp flex items-center justify-center gap-3">
+                    The Ultimate Learning Competition Platform
+                    <span className="inline-block animate-bounce"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="#facc15"/></svg></span>
                   </p>
-                  <div className="flex flex-col md:flex-row justify-center gap-4 max-w-md mx-auto">
+                  <p className="text-lg md:text-xl text-cyan-200/90 max-w-3xl mx-auto mb-10 animate-fadeIn">
+                    Compete in interactive quizzes, climb the leaderboard, earn points, and unlock real rewards. Join a vibrant community where every answer brings you closer to victory. Are you ready to challenge your friends and become a champion of knowledge?
+                  </p>
+                  <div className="flex flex-col md:flex-row justify-center gap-4 max-w-md mx-auto animate-fadeIn">
                     {!user && (
                       <>
                         <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
                           <DialogTrigger asChild>
                             <Button 
                               size="lg" 
-                              className="bg-white text-cyan-500 hover:bg-gray-100"
+                              className="bg-cyan-500 text-white font-bold text-lg px-8 py-3 rounded-full shadow-cyan-glow hover:bg-cyan-600 hover:scale-105 transition-transform flex items-center gap-2"
                             >
-                              Sign up
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="inline-block mr-1"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="#facc15"/></svg>
+                              Join the Competition
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="bg-transparent border-0 max-w-full p-0 flex items-center justify-center">
@@ -324,7 +336,7 @@ const Index = () => {
                             <Button 
                               size="lg" 
                               variant="outline" 
-                              className="border-white text-white hover:bg-white/10"
+                              className="border-cyan-400 text-cyan-200 hover:bg-cyan-900/30 hover:text-white text-lg px-8 py-3 rounded-full shadow-cyan-glow"
                             >
                               Log in
                             </Button>
@@ -343,159 +355,114 @@ const Index = () => {
                   </div>
                 </div>
               </section>
-              
-              {/* Join Quiz Section */}
-              <section className="bg-white py-12">
+              {/* Features Section - visually distinct, animated cards */}
+              <section className="py-20 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
                 <div className="container mx-auto px-4">
-                  <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl">
-                    <div className="p-8">
-                      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-                        Join a Quiz
-                      </h2>
-                      <form onSubmit={handleJoinQuiz} className="space-y-4">
-                        <div>
-                          <input
-                            type="text"
-                            value={enteredCode}
-                            onChange={(e) => setEnteredCode(e.target.value)}
-                            placeholder="Enter quiz code"
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-center text-2xl font-medium tracking-wider placeholder:text-gray-400"
-                            maxLength={6}
-                          />
-                        </div>
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-cyan-500 hover:bg-cyan-600 text-lg"
-                          disabled={!enteredCode}
-                        >
-                          Enter
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              
-              {/* Features Section */}
-              <section className="bg-gray-50 py-16">
-                <div className="container mx-auto px-4">
-                  <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <h2 className="text-4xl font-bold text-center mb-14 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text drop-shadow-cyan-glow animate-fadeIn">Why Brain Boost?</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     {/* Quiz Feature */}
-                    <div className="bg-white rounded-xl shadow-md p-6 text-center card-hover">
-                      <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <GraduationCap className="h-8 w-8 text-cyan-500" />
+                    <div className="bg-gradient-to-br from-cyan-900/60 to-blue-900/60 rounded-3xl shadow-2xl p-10 text-left border-l-4 border-cyan-400/40 hover:scale-105 transition-transform duration-300 animate-slideUp delay-100">
+                      <div className="w-16 h-16 bg-cyan-700/30 rounded-xl flex items-center justify-center mb-6 shadow-cyan-glow animate-bounce">
+                        <GraduationCap className="h-9 w-9 text-cyan-300" />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Interactive Quizzes</h3>
-                      <p className="text-gray-600">
-                        Teachers create engaging quizzes with multiple-choice, true/false, and short answer questions. Students join with a unique access code.
+                      <h3 className="text-2xl font-bold mb-2 text-cyan-100">Interactive Quizzes</h3>
+                      <p className="text-cyan-200/90">
+                        Teachers create engaging quizzes with multiple-choice, true/false, and short answer questions. Students join with a unique access code and compete for the top spot.
                       </p>
                     </div>
-                    
                     {/* Points Feature */}
-                    <div className="bg-white rounded-xl shadow-md p-6 text-center card-hover">
-                      <div className="w-16 h-16 bg-edu-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <ShoppingBag className="h-8 w-8 text-edu-orange-500" />
+                    <div className="bg-gradient-to-br from-blue-900/60 to-cyan-900/60 rounded-2xl shadow-xl p-8 text-center border-t-4 border-blue-400/40 hover:scale-105 transition-transform duration-300 animate-slideUp delay-200">
+                      <div className="w-16 h-16 bg-blue-700/30 rounded-full flex items-center justify-center mx-auto mb-5 shadow-cyan-glow animate-bounce">
+                        <ShoppingBag className="h-8 w-8 text-blue-300" />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Points & Rewards</h3>
-                      <p className="text-gray-600">
-                        Earn points by performing well on quizzes. Top performers get more points. Redeem them in the shop for exciting rewards.
+                      <h3 className="text-2xl font-bold mb-2 text-blue-100">Points & Rewards</h3>
+                      <p className="text-blue-200/90">
+                        Earn points by performing well on quizzes. Redeem your points in the shop for real rewards and prizes. The more you learn, the more you earn!
                       </p>
                     </div>
-                    
                     {/* Forum Feature */}
-                    <div className="bg-white rounded-xl shadow-md p-6 text-center card-hover">
-                      <div className="w-16 h-16 bg-edu-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <MessageCircle className="h-8 w-8 text-edu-blue-500" />
+                    <div className="bg-gradient-to-br from-teal-900/60 to-cyan-900/60 rounded-xl shadow-lg p-7 text-right border-r-4 border-teal-400/40 hover:scale-105 transition-transform duration-300 animate-slideUp delay-300">
+                      <div className="w-14 h-14 bg-teal-700/30 rounded-2xl flex items-center justify-center ml-auto mb-4 shadow-cyan-glow animate-bounce">
+                        <MessageCircle className="h-7 w-7 text-teal-300" />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Learning Forum</h3>
-                      <p className="text-gray-600">
-                        Ask questions, share knowledge, and help others. The community-driven forum connects students and teachers.
+                      <h3 className="text-2xl font-bold mb-2 text-teal-100">Collaborative Forum</h3>
+                      <p className="text-teal-200/90">
+                        Ask questions, share knowledge, and help others in a vibrant, supportive community. The forum connects students and teachers for deeper learning.
                       </p>
                     </div>
                   </div>
                 </div>
               </section>
-              
-              {/* Testimonials/Users */}
-              <section className="bg-white py-16">
+              {/* Testimonials Section - horizontal scroll on mobile, fade-in on desktop */}
+              <section className="py-20 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
                 <div className="container mx-auto px-4">
-                  <h2 className="text-3xl font-bold text-center mb-2">Who Uses EduQuestVerse</h2>
-                  <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Join thousands of teachers and students already enhancing their educational experience
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <h2 className="text-4xl font-bold text-center mb-10 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text drop-shadow-cyan-glow animate-fadeIn">What Our Users Say</h2>
+                  <div className="flex gap-8 overflow-x-auto md:grid md:grid-cols-3 md:gap-10 snap-x md:snap-none pb-4 md:pb-0">
                     {/* Teacher Testimonial */}
-                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start mb-4">
-                        <div className="bg-cyan-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                          T
-                        </div>
+                    <div className="min-w-[320px] md:min-w-0 bg-gradient-to-br from-cyan-900/60 to-blue-900/60 rounded-2xl p-8 shadow-xl border border-cyan-700/30 snap-center animate-fadeIn delay-100">
+                      <div className="flex items-center mb-5">
+                        <div className="bg-cyan-500 w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-cyan-glow mr-4">T</div>
                         <div>
-                          <h4 className="font-semibold">Emily Rodriguez</h4>
-                          <p className="text-sm text-gray-600">Math Teacher</p>
+                          <h4 className="font-semibold text-cyan-100">Emily Rodriguez</h4>
+                          <p className="text-sm text-cyan-200/80">Math Teacher</p>
                         </div>
                       </div>
-                      <p className="text-gray-700">
+                      <p className="text-cyan-100 text-lg">
                         "Brain Boost has transformed my classroom. Creating interactive quizzes keeps my students engaged, and the point system motivates them to participate actively."
                       </p>
                     </div>
-                    
                     {/* Student Testimonial */}
-                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start mb-4">
-                        <div className="bg-cyan-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                          S
-                        </div>
+                    <div className="min-w-[320px] md:min-w-0 bg-gradient-to-br from-blue-900/60 to-cyan-900/60 rounded-2xl p-8 shadow-xl border border-blue-700/30 snap-center animate-fadeIn delay-200">
+                      <div className="flex items-center mb-5">
+                        <div className="bg-blue-500 w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-cyan-glow mr-4">S</div>
                         <div>
-                          <h4 className="font-semibold">Alex Johnson</h4>
-                          <p className="text-sm text-gray-600">High School Student</p>
+                          <h4 className="font-semibold text-blue-100">Alex Johnson</h4>
+                          <p className="text-sm text-blue-200/80">High School Student</p>
                         </div>
                       </div>
-                      <p className="text-gray-700">
+                      <p className="text-blue-100 text-lg">
                         "I love competing in quizzes and earning points! The forum helps me when I'm stuck on homework, and I've already redeemed points for some cool prizes."
                       </p>
                     </div>
-                    
                     {/* Admin Testimonial */}
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-start mb-4">
-                        <div className="bg-blue-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                          A
-                        </div>
+                    <div className="min-w-[320px] md:min-w-0 bg-gradient-to-br from-teal-900/60 to-cyan-900/60 rounded-2xl p-8 shadow-xl border border-teal-700/30 snap-center animate-fadeIn delay-300">
+                      <div className="flex items-center mb-5">
+                        <div className="bg-teal-500 w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-cyan-glow mr-4">A</div>
                         <div>
-                          <h4 className="font-semibold">Michael Thompson</h4>
-                          <p className="text-sm text-gray-600">School Administrator</p>
+                          <h4 className="font-semibold text-teal-100">Michael Thompson</h4>
+                          <p className="text-sm text-teal-200/80">School Administrator</p>
                         </div>
                       </div>
-                      <p className="text-gray-700">
+                      <p className="text-teal-100 text-lg">
                         "As an administrator, I appreciate how Brain Boost provides valuable insights into student engagement and performance while making learning fun."
                       </p>
                     </div>
                   </div>
                 </div>
               </section>
-              
-              {/* CTA Section */}
-              <section className="bg-cyan-500 py-16">
+              {/* CTA Section - strong, glowing call to action, competition themed */}
+              <section className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-500 py-20">
                 <div className="container mx-auto px-4 text-center">
-                  <h2 className="text-3xl font-bold text-white mb-6">Ready to Transform Your Learning Experience?</h2>
-                  <p className="text-white/90 max-w-2xl mx-auto mb-8 text-lg">
-                    Join Brain Boost today and discover a new way to teach, learn, and be rewarded.
+                  <h2 className="text-4xl font-bold text-white mb-6 drop-shadow-cyan-glow animate-fadeIn flex items-center justify-center gap-3">
+                    Are You Ready to Compete, Learn, and Win?
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="#facc15"/></svg>
+                  </h2>
+                  <p className="text-white/90 max-w-2xl mx-auto mb-8 text-lg animate-fadeIn">
+                    Join Brain Boost today and experience the thrill of learning through competition. Sign up for free and start your journey to the top of the leaderboard!
                   </p>
                   <Button 
                     size="lg" 
-                    className="bg-white text-cyan-500 hover:bg-gray-100 px-8"
+                    className="bg-white text-cyan-500 hover:bg-gray-100 px-8 font-bold text-lg shadow-cyan-glow animate-bounce flex items-center gap-2"
                     asChild
                   >
-                    <Link to="/register">Get Started Now</Link>
+                    <Link to="/register">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="inline-block mr-1"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="#facc15"/></svg>
+                      Start Competing
+                    </Link>
                   </Button>
                 </div>
               </section>
             </main>
-            
             <Footer />
           </>
         )}

@@ -246,7 +246,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
             </div>
           )}
 
-          {quizDetails && !isLoading && (
+          {quizDetails && !isLoading && quizDetails.status !== 'archived' && quizDetails.status === 'published' && (
             <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-semibold">{quizDetails.title}</h3>
               <p className="text-sm text-gray-600">
@@ -262,6 +262,18 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
               >
                 {isLoading ? 'Joining...' : 'Join Quiz'}
               </Button>
+            </div>
+          )}
+
+          {quizDetails && quizDetails.status === 'archived' && !isLoading && (
+            <div className="text-center text-red-500 font-semibold p-4">
+              This quiz is archived and cannot be joined.
+            </div>
+          )}
+
+          {quizDetails && quizDetails.status !== 'published' && quizDetails.status !== 'archived' && !isLoading && (
+            <div className="text-center text-yellow-500 font-semibold p-4">
+              This quiz is not available to join. Only published quizzes can be joined.
             </div>
           )}
 
