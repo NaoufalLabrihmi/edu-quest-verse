@@ -109,31 +109,31 @@ const SignupModal: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-purple-200">I am a...</Label>
+          <Label className="text-cyan-200">I am a...</Label>
           <div className="flex flex-row gap-2 justify-center mt-1">
             <button
               type="button"
-              className={`flex flex-col items-center px-2 py-2 rounded-xl border-2 transition-all duration-150 w-24 ${role === 'student' ? 'border-purple-500 bg-purple-950/60 shadow-md' : 'border-gray-700 bg-gray-950 hover:border-purple-400'}`}
+              className={`flex flex-col items-center px-2 py-2 rounded-xl border-2 transition-all duration-150 w-24 ${role === 'student' ? 'border-cyan-500 bg-cyan-950/60 shadow-md' : 'border-gray-700 bg-gray-950 hover:border-cyan-400'}`}
               onClick={() => setRole('student')}
               aria-pressed={role === 'student'}
             >
-              <GraduationCap className={`w-6 h-6 mb-1 ${role === 'student' ? 'text-purple-400' : 'text-gray-400'}`} />
-              <span className={`font-semibold text-xs ${role === 'student' ? 'text-purple-200' : 'text-gray-300'}`}>Student</span>
+              <GraduationCap className={`w-6 h-6 mb-1 ${role === 'student' ? 'text-cyan-400' : 'text-gray-400'}`} />
+              <span className={`font-semibold text-xs ${role === 'student' ? 'text-cyan-200' : 'text-gray-300'}`}>Student</span>
             </button>
             <button
               type="button"
-              className={`flex flex-col items-center px-2 py-2 rounded-xl border-2 transition-all duration-150 w-24 ${role === 'teacher' ? 'border-purple-500 bg-purple-950/60 shadow-md' : 'border-gray-700 bg-gray-950 hover:border-purple-400'}`}
+              className={`flex flex-col items-center px-2 py-2 rounded-xl border-2 transition-all duration-150 w-24 ${role === 'teacher' ? 'border-cyan-500 bg-cyan-950/60 shadow-md' : 'border-gray-700 bg-gray-950 hover:border-cyan-400'}`}
               onClick={() => setRole('teacher')}
               aria-pressed={role === 'teacher'}
             >
-              <MessageCircle className={`w-6 h-6 mb-1 ${role === 'teacher' ? 'text-purple-400' : 'text-gray-400'}`} />
-              <span className={`font-semibold text-xs ${role === 'teacher' ? 'text-purple-200' : 'text-gray-300'}`}>Teacher</span>
+              <MessageCircle className={`w-6 h-6 mb-1 ${role === 'teacher' ? 'text-cyan-400' : 'text-gray-400'}`} />
+              <span className={`font-semibold text-xs ${role === 'teacher' ? 'text-cyan-200' : 'text-gray-300'}`}>Teacher</span>
             </button>
           </div>
         </div>
         <Button
           type="submit"
-          className="w-full bg-purple-700 hover:bg-purple-800 text-base font-bold border-0 shadow-md py-2"
+          className="w-full bg-cyan-700 hover:bg-cyan-800 text-base font-bold border-0 shadow-md py-2"
           disabled={isLoading}
         >
           {isLoading ? 'Creating account...' : 'Create account'}
@@ -276,11 +276,11 @@ const Index = () => {
           <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md transition-opacity duration-500 animate-fadeIn">
             <div className="flex flex-col items-center gap-6">
               <div className="relative flex items-center justify-center">
-                <span className="absolute animate-ping w-24 h-24 rounded-full bg-purple-600 opacity-30"></span>
-                <GraduationCap className="w-20 h-20 text-purple-400 animate-spin-slow" />
+                <span className="absolute animate-ping w-24 h-24 rounded-full bg-cyan-600 opacity-30"></span>
+                <GraduationCap className="w-20 h-20 text-cyan-400 animate-spin-slow" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg">Welcome back to EduQuestVerse!</h2>
-              <p className="text-lg text-purple-100 text-center">Empowering your learning journey...</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg">Welcome back to Brain Boost!</h2>
+              <p className="text-lg text-cyan-100 text-center">Empowering your learning journey...</p>
             </div>
           </div>
         )}
@@ -305,7 +305,7 @@ const Index = () => {
                           <DialogTrigger asChild>
                             <Button 
                               size="lg" 
-                              className="bg-white text-edu-purple-500 hover:bg-gray-100"
+                              className="bg-white text-cyan-500 hover:bg-gray-100"
                             >
                               Sign up
                             </Button>
@@ -357,13 +357,13 @@ const Index = () => {
                             value={enteredCode}
                             onChange={(e) => setEnteredCode(e.target.value)}
                             placeholder="Enter quiz code"
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-edu-purple-500 focus:border-transparent text-center text-2xl font-medium tracking-wider placeholder:text-gray-400"
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-center text-2xl font-medium tracking-wider placeholder:text-gray-400"
                             maxLength={6}
                           />
                         </div>
                         <Button 
                           type="submit" 
-                          className="w-full bg-edu-purple-500 hover:bg-edu-purple-600 text-lg"
+                          className="w-full bg-cyan-500 hover:bg-cyan-600 text-lg"
                           disabled={!enteredCode}
                         >
                           Enter
@@ -382,8 +382,8 @@ const Index = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Quiz Feature */}
                     <div className="bg-white rounded-xl shadow-md p-6 text-center card-hover">
-                      <div className="w-16 h-16 bg-edu-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <GraduationCap className="h-8 w-8 text-edu-purple-500" />
+                      <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <GraduationCap className="h-8 w-8 text-cyan-500" />
                       </div>
                       <h3 className="text-xl font-bold mb-2">Interactive Quizzes</h3>
                       <p className="text-gray-600">
@@ -426,9 +426,9 @@ const Index = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {/* Teacher Testimonial */}
-                    <div className="bg-gradient-to-br from-edu-blue-50 to-edu-purple-50 rounded-xl p-6 shadow-sm">
+                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-6 shadow-sm">
                       <div className="flex items-start mb-4">
-                        <div className="bg-edu-blue-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                        <div className="bg-cyan-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
                           T
                         </div>
                         <div>
@@ -437,14 +437,14 @@ const Index = () => {
                         </div>
                       </div>
                       <p className="text-gray-700">
-                        "EduQuestVerse has transformed my classroom. Creating interactive quizzes keeps my students engaged, and the point system motivates them to participate actively."
+                        "Brain Boost has transformed my classroom. Creating interactive quizzes keeps my students engaged, and the point system motivates them to participate actively."
                       </p>
                     </div>
                     
                     {/* Student Testimonial */}
-                    <div className="bg-gradient-to-br from-edu-orange-50 to-edu-pink-50 rounded-xl p-6 shadow-sm">
+                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-6 shadow-sm">
                       <div className="flex items-start mb-4">
-                        <div className="bg-edu-orange-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                        <div className="bg-cyan-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
                           S
                         </div>
                         <div>
@@ -458,9 +458,9 @@ const Index = () => {
                     </div>
                     
                     {/* Admin Testimonial */}
-                    <div className="bg-gradient-to-br from-edu-purple-50 to-edu-pink-50 rounded-xl p-6 shadow-sm">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 shadow-sm">
                       <div className="flex items-start mb-4">
-                        <div className="bg-edu-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                        <div className="bg-blue-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3">
                           A
                         </div>
                         <div>
@@ -469,7 +469,7 @@ const Index = () => {
                         </div>
                       </div>
                       <p className="text-gray-700">
-                        "As an administrator, I appreciate how EduQuestVerse provides valuable insights into student engagement and performance while making learning fun."
+                        "As an administrator, I appreciate how Brain Boost provides valuable insights into student engagement and performance while making learning fun."
                       </p>
                     </div>
                   </div>
@@ -477,15 +477,15 @@ const Index = () => {
               </section>
               
               {/* CTA Section */}
-              <section className="bg-edu-purple-500 py-16">
+              <section className="bg-cyan-500 py-16">
                 <div className="container mx-auto px-4 text-center">
                   <h2 className="text-3xl font-bold text-white mb-6">Ready to Transform Your Learning Experience?</h2>
                   <p className="text-white/90 max-w-2xl mx-auto mb-8 text-lg">
-                    Join EduQuestVerse today and discover a new way to teach, learn, and be rewarded.
+                    Join Brain Boost today and discover a new way to teach, learn, and be rewarded.
                   </p>
                   <Button 
                     size="lg" 
-                    className="bg-white text-edu-purple-500 hover:bg-gray-100 px-8"
+                    className="bg-white text-cyan-500 hover:bg-gray-100 px-8"
                     asChild
                   >
                     <Link to="/register">Get Started Now</Link>

@@ -89,7 +89,7 @@ const StudentDashboard = () => {
         <div className="container mx-auto px-4">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 text-transparent bg-clip-text">
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-transparent bg-clip-text">
               Welcome back, {user?.user_metadata.name || user?.email}
             </h1>
             <p className="text-gray-600">Here's what's happening in your learning world</p>
@@ -99,7 +99,7 @@ const StudentDashboard = () => {
             {/* Main Content - 2/3 width */}
             <div className="lg:col-span-2 space-y-6">
               {/* Points and Level Card */}
-              <Card className="bg-gradient-to-br from-edu-purple-500 to-edu-blue-600 text-white overflow-hidden">
+              <Card className="bg-gradient-to-br from-cyan-600 to-blue-600 text-white overflow-hidden">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -136,7 +136,7 @@ const StudentDashboard = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Upcoming Quizzes</CardTitle>
-                    <Link to="/quizzes" className="text-sm text-edu-purple-600 hover:underline font-medium">
+                    <Link to="/quizzes" className="text-sm text-cyan-600 hover:underline font-medium">
                       View all
                     </Link>
                   </div>
@@ -145,17 +145,17 @@ const StudentDashboard = () => {
                   {studentData.upcomingQuizzes.length > 0 ? (
                     <div className="space-y-4">
                       {studentData.upcomingQuizzes.map((quiz) => (
-                        <Card key={quiz.id} className="border border-gray-200 hover:border-edu-purple-200 transition-colors">
+                        <Card key={quiz.id} className="border border-gray-200 hover:border-cyan-200 transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
                               <div>
                                 <h3 className="font-semibold text-lg">{quiz.title}</h3>
                                 <p className="text-sm text-gray-500">By {quiz.teacher}</p>
                                 <div className="flex items-center mt-2 space-x-2">
-                                  <Badge variant="outline" className="bg-edu-blue-50 text-edu-blue-700 border-edu-blue-200">
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                     {quiz.subject}
                                   </Badge>
-                                  <Badge variant="outline" className="bg-edu-purple-50 text-edu-purple-700 border-edu-purple-200">
+                                  <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
                                     {quiz.difficulty}
                                   </Badge>
                                 </div>
@@ -227,12 +227,12 @@ const StudentDashboard = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button className="w-full justify-start bg-edu-blue-500 hover:bg-edu-blue-600" asChild>
+                  <Button className="w-full justify-start bg-cyan-500 hover:bg-cyan-600" asChild>
                     <Link to="/join-quiz">
                       <GraduationCap className="h-4 w-4 mr-2" /> Join a Quiz
                     </Link>
                   </Button>
-                  <Button className="w-full justify-start bg-edu-purple-500 hover:bg-edu-purple-600" asChild>
+                  <Button className="w-full justify-start bg-blue-500 hover:bg-blue-600" asChild>
                     <Link to="/forum/new">
                       <MessageCircle className="h-4 w-4 mr-2" /> Ask a Question
                     </Link>
@@ -249,7 +249,7 @@ const StudentDashboard = () => {
                   <div className="space-y-4">
                     {studentData.achievements.map((achievement) => (
                       <div key={achievement.id} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-edu-purple-100 flex items-center justify-center text-xl">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center text-xl">
                           {achievement.icon}
                         </div>
                         <div>

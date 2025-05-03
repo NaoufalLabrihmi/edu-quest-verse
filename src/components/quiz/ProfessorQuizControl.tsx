@@ -586,147 +586,219 @@ export function ProfessorQuizControl({ quizId, sessionId, questions }: Props) {
   const progressPercent = ((session.current_question_index + 1) / questions.length) * 100;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Quiz Control Panel</span>
-            <Badge variant="secondary">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-x-hidden font-sans">
+      {/* Full-page animated dark gradient background with subtle academic pattern overlay */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-br from-[#0a1626] via-[#101624] to-[#232b3b] animate-fade-in" aria-hidden="true" />
+      {/* Academic pattern overlay */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{background: 'url(\"data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Crect x=\'0.5\' y=\'0.5\' width=\'39\' height=\'39\' rx=\'8.5\' fill=\'none\' stroke=\'%2367e8f933\'/%3E%3C/svg%3E\")', opacity: 0.12}} />
+      <style>{`
+        .animate-gradient-x {
+          background: linear-gradient(90deg, #67e8f9, #60a5fa, #cbd5e1, #67e8f9);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradient-x 3s ease-in-out infinite;
+        }
+        @keyframes gradient-x {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .shadow-cyan-glow {
+          box-shadow: 0 0 24px 4px #22d3ee44, 0 0 48px 8px #38bdf844;
+        }
+        .animate-podium-glow {
+          animation: podium-glow 2.5s alternate infinite;
+        }
+        @keyframes podium-glow {
+          0% { box-shadow: 0 0 16px 4px #22d3ee44, 0 0 32px 8px #38bdf844; }
+          100% { box-shadow: 0 0 32px 8px #38bdf844, 0 0 64px 16px #22d3ee44; }
+        }
+        .glass-card {
+          background: rgba(22, 32, 50, 0.82);
+          border-radius: 2rem;
+          box-shadow: 0 8px 40px 0 #0fffcf22, 0 1.5px 8px 0 #232b3b44;
+          border: 1.5px solid #67e8f955;
+          backdrop-filter: blur(18px) saturate(1.2);
+        }
+        .serif-heading {
+          font-family: 'Merriweather', 'Georgia', serif;
+        }
+        .pill-btn {
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #0e2233 60%, #1e3a4c 100%);
+          color: #e0f7fa;
+          border: 1.5px solid #67e8f955;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          font-weight: 700;
+          font-size: 1.15rem;
+          transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+        }
+        .pill-btn:hover, .pill-btn:focus {
+          background: linear-gradient(90deg, #22d3ee 0%, #60a5fa 100%);
+          color: #0a1626;
+          box-shadow: 0 0 0 4px #67e8f955, 0 2px 24px 0 #38bdf844;
+          transform: scale(1.04);
+        }
+        .status-fab {
+          position: absolute;
+          top: -2.5rem;
+          left: -2.5rem;
+          z-index: 20;
+          background: linear-gradient(135deg, #22d3eecc 60%, #60a5facc 100%);
+          color: #fff;
+          border-radius: 1.5rem;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          padding: 0.9rem 1.6rem;
+          font-size: 1.1rem;
+          font-weight: 800;
+          border: 2px solid #67e8f9cc;
+          backdrop-filter: blur(8px);
+        }
+        .floating-participants {
+          position: absolute;
+          top: -2.5rem;
+          right: -2.5rem;
+          z-index: 20;
+          background: linear-gradient(135deg, #232b3bcc 60%, #22d3eecc 100%);
+          color: #e0f7fa;
+          border-radius: 1.5rem;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          padding: 0.9rem 1.6rem;
+          font-size: 1.1rem;
+          font-weight: 800;
+          border: 2px solid #67e8f9cc;
+          backdrop-filter: blur(8px);
+        }
+      `}</style>
+      <div className="relative z-10 w-full flex flex-col items-center justify-center py-8 px-2">
+        <div className="relative w-full max-w-md mx-auto glass-card px-6 pt-12 pb-8 flex flex-col items-center shadow-cyan-glow">
+          {/* Floating session status card */}
+          <div className="status-fab">
+            <span className="serif-heading text-base font-bold">
+              {session.status === 'waiting' ? 'Waiting' :
+                session.status === 'active' ? 'Active' :
+                session.status === 'paused' ? 'Paused' :
+                session.status === 'question_ended' ? "Time's Up!" : 'Ended'}
+            </span>
+          </div>
+          {/* Floating participants badge */}
+          <div className="floating-participants flex items-center gap-2">
+            <Users className="h-5 w-5 text-cyan-100" />
+            <span className="serif-heading">{participants.length}</span>
+          </div>
+          {/* Card header */}
+          <div className="w-full text-center mb-2">
+            <span className="serif-heading text-lg font-bold text-cyan-200 drop-shadow animate-gradient-x">Quiz Control Panel</span>
+            <Badge className="ml-3 bg-cyan-500/20 border-cyan-400/20 text-cyan-100 shadow">
               Question {session.current_question_index + 1} of {questions.length}
             </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Timer and Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Time Remaining:</span>
-                </div>
-                <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
-              </div>
-              <Progress value={(timeLeft / currentQuestion.time_limit) * 100} />
+            {/* Thin glowing progress bar */}
+            <div className="w-full h-1 mt-3 rounded-full bg-cyan-900/60 overflow-hidden">
+              <div className="h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 shadow-cyan-glow transition-all duration-500" style={{width: `${progressPercent}%`}} />
             </div>
-
-            {/* Question Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>Overall Progress</span>
-                <span>{Math.round(progressPercent)}%</span>
               </div>
-              <Progress value={progressPercent} className="bg-gray-100" />
+          {/* Timer */}
+          <div className="flex justify-center items-center gap-2 text-base text-cyan-200 font-semibold mt-4 mb-2">
+            <Clock className="h-5 w-5 text-cyan-400" />
+            <span>Time:</span>
+            <span className="font-mono text-cyan-100 text-lg">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
             </div>
-
-            {/* Participants */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-gray-500" />
-                <span className="font-medium">Participants</span>
-              </div>
-              <Badge variant="secondary">{participants.length}</Badge>
+          {/* Question */}
+          <div className="w-full text-center mt-2 mb-6">
+            <p className="serif-heading text-2xl md:text-3xl font-black text-cyan-100 drop-shadow-xl animate-gradient-x mb-2" style={{textShadow: '0 2px 12px #0fffcf33'}}>{currentQuestion?.question_text || 'Loading question...'}</p>
             </div>
-
             {/* Controls */}
-            <div className="flex gap-3">
+          <div className="flex flex-col gap-3 w-full mt-2">
+            <div className="flex gap-3 w-full">
               {session.status === 'waiting' && (
-                <Button
+                <button
                   onClick={startQuestion}
-                  className="flex-1"
-                  variant="default"
+                  className="pill-btn flex-1 py-4 px-6 mt-1"
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-5 w-5 mr-2 inline-block" />
                   Start Question
-                </Button>
+                </button>
               )}
               {session.status === 'active' && (
-                <Button
+                <button
                   onClick={pauseQuestion}
-                  className="flex-1"
-                  variant="secondary"
+                  className="pill-btn flex-1 py-4 px-6 mt-1"
                 >
-                  <Pause className="h-4 w-4 mr-2" />
+                  <Pause className="h-5 w-5 mr-2 inline-block" />
                   Pause
-                </Button>
+                </button>
               )}
               {session.status === 'paused' && (
-                <Button
+                <button
                   onClick={startQuestion}
-                  className="flex-1"
-                  variant="default"
+                  className="pill-btn flex-1 py-4 px-6 mt-1"
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-5 w-5 mr-2 inline-block" />
                   Resume
-                </Button>
+                </button>
               )}
               {(session.status === 'active' || session.status === 'paused') && (
-                <Button
+                <button
                   onClick={handleQuestionEnd}
-                  className="flex-1 ml-2"
-                  variant="destructive"
+                  className="pill-btn flex-1 py-4 px-6 mt-1 bg-gradient-to-r from-cyan-600 via-blue-500 to-cyan-400 text-white"
                 >
                   End Question
-                </Button>
+                </button>
               )}
               {session.status === 'question_ended' && (
-                <Button
+                <button
                   onClick={nextQuestion}
-                  className="flex-1"
-                  variant="default"
+                  className="pill-btn flex-1 py-4 px-6 mt-1"
                 >
-                  <SkipForward className="h-4 w-4 mr-2" />
+                  <SkipForward className="h-5 w-5 mr-2 inline-block" />
                   Next Question
-                </Button>
+                </button>
               )}
-              <Button
+              <button
                 onClick={() => navigate(`/quiz/${quizId}/results`)}
-                variant="outline"
+                className="pill-btn py-4 px-6 mt-1 flex items-center justify-center"
+                style={{minWidth: '3.5rem'}}
+                aria-label="Results"
               >
-                <BarChart2 className="h-4 w-4" />
-              </Button>
+                <BarChart2 className="h-5 w-5" />
+              </button>
             </div>
-
+          </div>
             {/* Question Results */}
             {session.status === 'question_ended' && (
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-medium mb-4">Question Results</h3>
+            <div className="mt-8 pt-8 border-t border-cyan-800/40 w-full">
+              <h3 className="serif-heading font-black text-cyan-200 text-xl mb-4 drop-shadow-xl">Question Results</h3>
                 {questionResults.length > 0 ? (
                   <div className="space-y-2">
                     {questionResults.map((result, index) => (
-                      <div key={result.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={result.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/30 to-slate-900/30 rounded-xl shadow-cyan-glow">
                         <div className="flex items-center">
-                          <span className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-full mr-3">
-                            {index + 1}
-                          </span>
-                          <span>{result.username}</span>
+                        <span className="w-8 h-8 flex items-center justify-center bg-cyan-700/60 text-cyan-100 rounded-full mr-3 font-bold text-lg shadow-cyan-glow">{index + 1}</span>
+                        <span className="serif-heading text-cyan-100 font-semibold">{result.username}</span>
                         </div>
                         <div className="flex items-center">
-                          <span className={`mr-2 ${result.is_correct ? 'text-green-500' : 'text-red-500'}`}>
-                            {result.is_correct ? 'Correct' : 'Incorrect'}
-                          </span>
-                          <span className="font-medium">{result.points_earned} pts</span>
+                        <span className={`mr-2 font-bold ${result.is_correct ? 'text-green-400' : 'text-red-400'}`}>{result.is_correct ? 'Correct' : 'Incorrect'}</span>
+                        <span className="font-bold text-cyan-200">{result.points_earned} pts</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No answers submitted yet</p>
+                <p className="text-cyan-400">No answers submitted yet</p>
                 )}
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
-      {/* End Quiz Button */}
-      <div className="flex justify-center mt-6">
-        <Button
-          variant="destructive"
-          onClick={endQuizNow}
-          className="w-full max-w-xs"
-        >
-          End Quiz
-        </Button>
+        {/* End Quiz Button */}
+        <div className="flex justify-center mt-8 w-full">
+          <button
+            onClick={endQuizNow}
+            className="pill-btn w-full max-w-xs py-4 px-6 bg-gradient-to-r from-cyan-600 via-blue-500 to-cyan-400 text-white font-bold mt-1"
+          >
+            End Quiz
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -164,14 +164,14 @@ const ForumPage = () => {
                     }
                   }}
                 >
-                  <h2 className="text-2xl font-extrabold mb-2 text-center text-edu-purple-200 tracking-tight drop-shadow-lg">Ask a Question</h2>
+                  <h2 className="text-2xl font-extrabold mb-2 text-center text-cyan-200 tracking-tight drop-shadow-lg">Ask a Question</h2>
                   <div>
                     <label className="block mb-2 font-semibold text-white/90" htmlFor="new-title">Title</label>
                     <Input
                       id="new-title"
                       value={newTitle}
                       onChange={e => setNewTitle(e.target.value)}
-                      className="bg-gray-800/80 border border-edu-blue-500 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-edu-blue-400 focus:border-edu-blue-400 transition-all"
+                      className="bg-gray-800/80 border border-cyan-500 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
                       placeholder="Enter a clear, concise title"
                       required
                     />
@@ -182,7 +182,7 @@ const ForumPage = () => {
                       id="new-description"
                       value={newDescription}
                       onChange={e => setNewDescription(e.target.value)}
-                      className="bg-gray-800/80 border border-edu-blue-500 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 min-h-[70px] focus:ring-2 focus:ring-edu-blue-400 focus:border-edu-blue-400 transition-all"
+                      className="bg-gray-800/80 border border-cyan-500 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 min-h-[70px] focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
                       placeholder="Describe your question..."
                       required
                     />
@@ -190,12 +190,12 @@ const ForumPage = () => {
                   <div>
                     <label className="block mb-2 font-semibold text-white/90" htmlFor="new-category">Category</label>
                     <Select value={newCategory} onValueChange={setNewCategory} required>
-                      <SelectTrigger className="bg-gray-800 border-edu-blue-500 text-white text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-edu-blue-400 focus:border-edu-blue-400 transition-all">
+                      <SelectTrigger className="bg-gray-800 border-cyan-500 text-white text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-900 text-white border border-edu-blue-500 rounded-xl shadow-xl">
+                      <SelectContent className="bg-gray-900 text-white border border-cyan-500 rounded-xl shadow-xl">
                         {categories.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value} className="bg-gray-900 text-white rounded-lg font-semibold text-base hover:bg-edu-blue-900/40 focus:bg-edu-blue-900/60">
+                          <SelectItem key={cat.value} value={cat.value} className="bg-gray-900 text-white rounded-lg font-semibold text-base hover:bg-cyan-900/40 focus:bg-cyan-900/60">
                             {cat.label}
                           </SelectItem>
                         ))}
@@ -205,7 +205,7 @@ const ForumPage = () => {
                   {newError && <div className="text-destructive text-sm text-center">{newError}</div>}
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-edu-purple-600 via-edu-blue-500 to-edu-pink-400 hover:from-edu-purple-700 hover:to-edu-pink-500 text-white font-extrabold shadow-lg rounded-xl px-6 py-2 text-lg flex items-center gap-2 transition-all duration-150 active:scale-95 mt-2"
+                    className="w-full bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 hover:from-cyan-700 hover:to-cyan-500 text-white font-extrabold shadow-lg rounded-xl px-6 py-2 text-lg flex items-center gap-2 transition-all duration-150 active:scale-95 mt-2"
                     disabled={newLoading}
                   >
                     {newLoading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : 'Post Question'}
@@ -365,14 +365,14 @@ const ForumPage = () => {
                 }
               }}
             >
-              <h2 className="text-2xl font-extrabold mb-2 text-center text-edu-purple-200 tracking-tight drop-shadow-lg">Edit Question</h2>
+              <h2 className="text-2xl font-extrabold mb-2 text-center text-cyan-200 tracking-tight drop-shadow-lg">Edit Question</h2>
               <div>
                 <label className="block mb-2 font-semibold text-white/90" htmlFor="edit-title">Title</label>
                 <Input
                   id="edit-title"
                   value={editModal.title}
                   onChange={e => setEditModal({ ...editModal, title: e.target.value })}
-                  className="bg-gray-800/80 border border-edu-purple-700 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-edu-purple-400 focus:border-edu-purple-400 transition-all"
+                  className="bg-gray-800/80 border border-cyan-700 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
                   required
                 />
               </div>
@@ -382,19 +382,19 @@ const ForumPage = () => {
                   id="edit-description"
                   value={editModal.description}
                   onChange={e => setEditModal({ ...editModal, description: e.target.value })}
-                  className="bg-gray-800/80 border border-edu-purple-700 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 min-h-[70px] focus:ring-2 focus:ring-edu-purple-400 focus:border-edu-purple-400 transition-all"
+                  className="bg-gray-800/80 border border-cyan-700 text-white placeholder-gray-400 text-base rounded-xl px-4 py-2 min-h-[70px] focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
                   required
                 />
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-white/90" htmlFor="edit-category">Category</label>
                 <Select value={editModal.category} onValueChange={val => setEditModal({ ...editModal, category: val })} required>
-                  <SelectTrigger className="bg-gray-800/80 border border-edu-blue-500 text-white text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-edu-blue-400 focus:border-edu-blue-400 transition-all">
+                  <SelectTrigger className="bg-gray-800/80 border border-cyan-500 text-white text-base rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 text-white border border-edu-blue-500 rounded-xl shadow-xl">
+                  <SelectContent className="bg-gray-900 text-white border border-cyan-500 rounded-xl shadow-xl">
                     {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value} className="bg-gray-900 text-white rounded-lg font-semibold text-base hover:bg-edu-blue-900/40 focus:bg-edu-blue-900/60">
+                      <SelectItem key={cat.value} value={cat.value} className="bg-gray-900 text-white rounded-lg font-semibold text-base hover:bg-cyan-900/40 focus:bg-cyan-900/60">
                         {cat.label}
                       </SelectItem>
                     ))}
@@ -405,7 +405,7 @@ const ForumPage = () => {
                 <span className="text-white font-semibold text-base">Status:</span>
                 <button
                   type="button"
-                  className={`flex items-center justify-center w-8 h-8 rounded-full border border-edu-blue-500 bg-edu-blue-700/20 hover:bg-edu-blue-600/60 transition-colors shadow focus:outline-none focus:ring-2 focus:ring-edu-blue-400 ${editModal.solved ? 'ring-2 ring-green-400' : ''}`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border border-cyan-500 bg-cyan-700/20 hover:bg-cyan-600/60 transition-colors shadow focus:outline-none focus:ring-2 focus:ring-cyan-400 ${editModal.solved ? 'ring-2 ring-green-400' : ''}`}
                   title={`Mark as ${editModal.solved ? 'Unsolved' : 'Solved'}`}
                   onClick={() => setEditModal({ ...editModal, solved: !editModal.solved })}
                 >
@@ -419,7 +419,7 @@ const ForumPage = () => {
               {editError && <div className="text-destructive text-base text-center mt-2">{editError}</div>}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-edu-purple-600 via-edu-blue-500 to-edu-pink-400 hover:from-edu-purple-700 hover:to-edu-pink-500 text-white font-extrabold shadow-lg rounded-xl px-6 py-2 text-lg flex items-center gap-2 transition-all duration-150 active:scale-95 mt-2"
+                className="w-full bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 hover:from-cyan-700 hover:to-cyan-500 text-white font-extrabold shadow-lg rounded-xl px-6 py-2 text-lg flex items-center gap-2 transition-all duration-150 active:scale-95 mt-2"
                 disabled={editLoading}
               >
                 {editLoading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : 'Save Changes'}
@@ -477,7 +477,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={post.author?.avatar_url || ''} />
-              <AvatarFallback className={post.author?.role === 'teacher' ? 'bg-edu-blue-500' : 'bg-edu-purple-500'}>
+              <AvatarFallback className={post.author?.role === 'teacher' ? 'bg-blue-500' : 'bg-cyan-500'}>
                 {post.author?.username?.substring(0, 2) || '?'}
               </AvatarFallback>
             </Avatar>
@@ -507,7 +507,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
             </Badge>
             {user && post.author?.id === user.id && (
               <button
-                className="ml-2 px-2 py-0.5 rounded bg-edu-blue-600 hover:bg-edu-blue-700 text-white text-xs font-semibold shadow transition-all"
+                className="ml-2 px-2 py-0.5 rounded bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow transition-all"
                 onClick={async (e) => {
                   e.stopPropagation();
                   await markPostSolved(post.id, !solved);
@@ -522,7 +522,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
             {user && post.author?.id === user.id && (
               <div className="relative ml-2">
                 <button
-                  className="p-2 rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-edu-purple-400 transition"
+                  className="p-2 rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
                   onClick={() => setShowMenu((v) => !v)}
                   aria-label="More options"
                 >
@@ -531,7 +531,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
                 {showMenu && (
                   <div className="absolute right-0 mt-2 w-32 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-20 animate-fade-in-up">
                     <button
-                      className="w-full text-left px-4 py-2 hover:bg-edu-purple-600 hover:text-white rounded-t-lg transition"
+                      className="w-full text-left px-4 py-2 hover:bg-cyan-600 hover:text-white rounded-t-lg transition"
                       onClick={() => { setShowMenu(false); setEditModal({ id: post.id, title: post.title, description: post.content, category: post.category?.id, solved }); }}
                     >
                       Edit
@@ -552,7 +552,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
       </CardHeader>
       <CardContent className="pb-4">
         <Link to={`/forum/${post.id}`} className="block group">
-          <h3 className="font-semibold text-lg hover:text-edu-purple-700 dark:hover:text-edu-blue-400 transition-colors mb-2 group-hover:underline">
+          <h3 className="font-semibold text-lg hover:text-cyan-700 dark:hover:text-blue-400 transition-colors mb-2 group-hover:underline">
             {post.title}
           </h3>
           <p className="text-muted-foreground text-sm line-clamp-2">
@@ -563,14 +563,14 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
       <CardFooter className="border-t bg-gray-800 py-3 flex items-center justify-between text-sm">
         <div className="flex items-center gap-6">
           <button
-            className={`flex items-center gap-1 group px-2 py-1 rounded-md transition-all duration-150 border border-transparent hover:border-edu-purple-400 focus-visible:ring-2 focus-visible:ring-edu-purple-400 ${likes.some((like: any) => like.user_id === user.id) ? 'text-edu-purple-400 bg-edu-purple-900/30' : 'text-gray-400 hover:bg-gray-700/40'} ${isLiking ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`flex items-center gap-1 group px-2 py-1 rounded-md transition-all duration-150 border border-transparent hover:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-400 ${likes.some((like: any) => like.user_id === user.id) ? 'text-cyan-400 bg-cyan-900/30' : 'text-gray-400 hover:bg-gray-700/40'} ${isLiking ? 'opacity-50 pointer-events-none' : ''}`}
             onClick={handleLike}
             disabled={isLiking || !user}
             aria-label={likes.some((like: any) => like.user_id === user.id) ? 'Unlike' : 'Like'}
             title={likes.some((like: any) => like.user_id === user.id) ? 'Unlike' : 'Like'}
             type="button"
           >
-            <Heart className={`h-5 w-5 transition-colors ${likes.some((like: any) => like.user_id === user.id) ? 'fill-edu-purple-400' : 'fill-none'} group-hover:scale-110`} />
+            <Heart className={`h-5 w-5 transition-colors ${likes.some((like: any) => like.user_id === user.id) ? 'fill-cyan-400' : 'fill-none'} group-hover:scale-110`} />
             <span className="font-semibold text-base ml-1">{likes.length}</span>
           </button>
           <span className="h-5 w-px bg-gray-700 mx-2 rounded-full" />
@@ -581,7 +581,7 @@ const ForumPostCard = ({ post, formatDate, setDeleteConfirmId, deleting, setEdit
           </div>
         </div>
         <span className="text-muted-foreground font-medium flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-full bg-edu-purple-400 mr-1"></span>
+          <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 mr-1"></span>
           {formatDate(post.created_at)}
         </span>
       </CardFooter>

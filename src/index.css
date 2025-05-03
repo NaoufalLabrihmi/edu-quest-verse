@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,35 +6,35 @@
 
 @layer base {
   :root {
-    --background: 240 50% 99%;
-    --foreground: 240 10% 3.9%;
+    --background: 215 40% 10%;
+    --foreground: 210 20% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 215 40% 14%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 215 40% 14%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 252 56% 69%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 188 80% 54%; /* teal/cyan */
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 240 5.9% 90%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 215 20% 22%;
+    --muted-foreground: 210 10% 70%;
 
-    --accent: 12 93% 64%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 200 98% 39%; /* steel blue */
+    --accent-foreground: 210 20% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 252 56% 69%;
+    --border: 215 30% 22%;
+    --input: 215 30% 22%;
+    --ring: 188 80% 54%;
 
-    --radius: 0.75rem;
+    --radius: 1.25rem;
 
     --sidebar-background: 252 56% 69%;
     --sidebar-foreground: 0 0% 100%;
@@ -48,33 +47,43 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 215 40% 10%;
+    --foreground: 210 20% 98%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 215 40% 14%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 215 40% 14%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 252 56% 69%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 188 80% 54%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 215 20% 22%;
+    --muted-foreground: 210 10% 70%;
 
-    --accent: 12 93% 64%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 200 98% 39%;
+    --accent-foreground: 210 20% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 252 56% 69%;
+    --border: 215 30% 22%;
+    --input: 215 30% 22%;
+    --ring: 188 80% 54%;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-[#101624] via-[#162032] to-[#1a2636] text-[color:hsl(var(--foreground))] font-sans min-h-screen;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6, .serif-heading {
+    font-family: 'Merriweather', 'Georgia', serif;
+    @apply font-bold;
   }
 }
 
@@ -82,19 +91,11 @@
   * {
     @apply border-border;
   }
-
-  body {
-    @apply bg-background text-foreground font-sans;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold;
-  }
 }
 
 @layer components {
   .hero-gradient {
-    @apply bg-gradient-to-br from-edu-purple-500 via-edu-blue-500 to-edu-pink-500;
+    @apply bg-gradient-to-br from-cyan-700 via-blue-800 to-teal-700;
   }
   
   .card-hover {
@@ -106,14 +107,44 @@
   }
   
   .input-focus {
-    @apply focus:ring-2 focus:ring-edu-purple-300 focus:border-edu-purple-500;
+    @apply focus:ring-2 focus:ring-cyan-400 focus:border-cyan-500;
   }
   
   .quiz-option {
-    @apply border-2 border-edu-purple-100 rounded-lg p-4 transition hover:border-edu-purple-500 cursor-pointer;
+    @apply border-2 border-cyan-100 rounded-lg p-4 transition hover:border-cyan-500 cursor-pointer;
   }
   
   .quiz-option-selected {
-    @apply border-2 border-edu-purple-500 bg-edu-purple-50;
+    @apply border-2 border-cyan-500 bg-cyan-50;
+  }
+
+  .glass {
+    @apply bg-gradient-to-br from-[#162032]/80 to-[#1a2636]/80 backdrop-blur-xl border border-[color:hsl(var(--border))] shadow-2xl;
+  }
+  .glass-card {
+    @apply glass rounded-3xl p-8;
+    box-shadow: 0 8px 40px 0 #0fffcf33, 0 1.5px 8px 0 #232b3b44;
+    border: 1.5px solid #38bdf8cc;
+    backdrop-filter: blur(18px) saturate(1.2);
+  }
+  .glass-nav {
+    @apply glass border-b-2 border-[color:hsl(var(--border))] shadow-lg;
+    backdrop-filter: blur(12px) saturate(1.1);
+  }
+  .glass-footer {
+    @apply glass border-t-2 border-[color:hsl(var(--border))] shadow-lg;
+    backdrop-filter: blur(12px) saturate(1.1);
+  }
+  .btn-glass {
+    @apply rounded-full px-6 py-2 font-bold bg-gradient-to-r from-cyan-700/80 to-blue-800/80 text-cyan-100 shadow-lg border border-cyan-700/40 hover:from-cyan-600 hover:to-blue-700 hover:text-white transition-all duration-200;
+  }
+  .input-glass {
+    @apply rounded-xl bg-gradient-to-r from-[#162032]/80 to-[#1a2636]/80 text-cyan-100 border border-cyan-700/40 shadow focus:ring-2 focus:ring-cyan-400/60;
+  }
+  .card-glass {
+    @apply glass rounded-3xl p-8 shadow-xl;
+  }
+  .badge-glass {
+    @apply rounded-full bg-gradient-to-r from-cyan-800/80 to-blue-900/80 text-cyan-100 border border-cyan-700/40 shadow px-4 py-1 font-bold;
   }
 }

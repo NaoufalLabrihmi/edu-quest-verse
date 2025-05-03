@@ -81,11 +81,11 @@ export function Navigation() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-edu-purple-500 to-edu-blue-500">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500">
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-display font-bold bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 bg-clip-text text-transparent">
-                EduQuestVerse
+              <span className="text-xl font-display font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                Brain Boost
               </span>
             </div>
           </div>
@@ -204,7 +204,7 @@ export function Navigation() {
                         >
                           <Avatar className="h-10 w-10 border-2 border-gray-100 shadow-sm">
                             <AvatarImage src={user.user_metadata.avatar_url} alt={user.email || ''} />
-                            <AvatarFallback className="bg-gradient-to-br from-edu-purple-500 to-edu-blue-500 text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white">
                               {user.email?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
@@ -244,7 +244,7 @@ export function Navigation() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 text-white font-medium hover:from-edu-purple-700 hover:to-edu-blue-700 transition-all duration-200 shadow-sm hover:shadow"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium hover:from-cyan-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow"
                   >
                     Register
                   </Link>
@@ -366,7 +366,7 @@ export function Navigation() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-3 rounded-lg bg-gradient-to-r from-edu-purple-600 to-edu-blue-600 text-white font-medium hover:from-edu-purple-700 hover:to-edu-blue-700 transition-all duration-200 shadow-sm hover:shadow"
+                    className="px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium hover:from-cyan-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow"
                   >
                     Register
                   </Link>

@@ -432,278 +432,354 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'}</span>
-            <Badge variant="secondary">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-x-hidden font-sans">
+      {/* Full-page animated dark gradient background with subtle academic pattern overlay */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-br from-[#0a1626] via-[#101624] to-[#232b3b] animate-fade-in" aria-hidden="true" />
+      {/* Academic pattern overlay */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{background: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Crect x=\'0.5\' y=\'0.5\' width=\'39\' height=\'39\' rx=\'8.5\' fill=\'none\' stroke=\'%2367e8f933\'/%3E%3C/svg%3E")', opacity: 0.12}} />
+      <style>{`
+        .animate-gradient-x {
+          background: linear-gradient(90deg, #67e8f9, #60a5fa, #cbd5e1, #67e8f9);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradient-x 3s ease-in-out infinite;
+        }
+        @keyframes gradient-x {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .shadow-cyan-glow {
+          box-shadow: 0 0 24px 4px #22d3ee44, 0 0 48px 8px #38bdf844;
+        }
+        .animate-podium-glow {
+          animation: podium-glow 2.5s alternate infinite;
+        }
+        @keyframes podium-glow {
+          0% { box-shadow: 0 0 16px 4px #22d3ee44, 0 0 32px 8px #38bdf844; }
+          100% { box-shadow: 0 0 32px 8px #38bdf844, 0 0 64px 16px #22d3ee44; }
+        }
+        .animate-fade-in {
+          animation: fade-in 1.2s cubic-bezier(0.4,0,0.2,1) both;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .glass-card {
+          background: rgba(22, 32, 50, 0.82);
+          border-radius: 2rem;
+          box-shadow: 0 8px 40px 0 #0fffcf22, 0 1.5px 8px 0 #232b3b44;
+          border: 1.5px solid #67e8f955;
+          backdrop-filter: blur(18px) saturate(1.2);
+        }
+        .serif-heading {
+          font-family: 'Merriweather', 'Georgia', serif;
+        }
+        .pill-btn {
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #0e2233 60%, #1e3a4c 100%);
+          color: #e0f7fa;
+          border: 1.5px solid #67e8f955;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          font-weight: 700;
+          font-size: 1.15rem;
+          transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+        }
+        .pill-btn:hover, .pill-btn:focus {
+          background: linear-gradient(90deg, #22d3ee 0%, #60a5fa 100%);
+          color: #0a1626;
+          box-shadow: 0 0 0 4px #67e8f955, 0 2px 24px 0 #38bdf844;
+          transform: scale(1.04);
+        }
+        .score-fab {
+          position: absolute;
+          top: -2.5rem;
+          left: -2.5rem;
+          z-index: 20;
+          background: linear-gradient(135deg, #22d3eecc 60%, #60a5facc 100%);
+          color: #fff;
+          border-radius: 1.5rem;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          padding: 0.9rem 1.6rem;
+          font-size: 1.1rem;
+          font-weight: 800;
+          border: 2px solid #67e8f9cc;
+          backdrop-filter: blur(8px);
+        }
+        .fab-exit {
+          position: fixed;
+          bottom: 2.5rem;
+          right: 2.5rem;
+          z-index: 50;
+          background: linear-gradient(135deg, #232b3bcc 60%, #22d3eecc 100%);
+          color: #e0f7fa;
+          border-radius: 9999px;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          padding: 1.1rem 1.3rem;
+          font-size: 1.3rem;
+          font-weight: 800;
+          border: 2px solid #67e8f9cc;
+          backdrop-filter: blur(8px);
+          transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .fab-exit:hover {
+          box-shadow: 0 0 0 6px #67e8f955, 0 2px 24px 0 #38bdf844;
+          color: #232b3b;
+          background: linear-gradient(135deg, #22d3ee 0%, #60a5fa 100%);
+          transform: scale(1.07);
+        }
+        .floating-participants {
+          position: absolute;
+          top: -2.5rem;
+          right: -2.5rem;
+          z-index: 20;
+          background: linear-gradient(135deg, #232b3bcc 60%, #22d3eecc 100%);
+          color: #e0f7fa;
+          border-radius: 1.5rem;
+          box-shadow: 0 2px 16px 0 #22d3ee33;
+          padding: 0.9rem 1.6rem;
+          font-size: 1.1rem;
+          font-weight: 800;
+          border: 2px solid #67e8f9cc;
+          backdrop-filter: blur(8px);
+        }
+      `}</style>
+      <div className="relative z-10 w-full flex flex-col items-center justify-center py-8 px-2">
+        <div className="relative w-full max-w-md mx-auto glass-card px-6 pt-12 pb-8 flex flex-col items-center shadow-cyan-glow">
+          {/* Floating score card */}
+          <div className="score-fab">
+            <Award className="inline-block mr-2 -mt-1 text-yellow-300 animate-podium-glow" />
+            <span className="serif-heading">{totalPoints} pts</span>
+          </div>
+          {/* Floating participants badge */}
+          <div className="floating-participants flex items-center gap-2">
+            <Users className="h-5 w-5 text-cyan-100" />
+            <span className="serif-heading">{participantCount}</span>
+          </div>
+          {/* Card header */}
+          <div className="w-full text-center mb-2">
+            <span className="serif-heading text-lg font-bold text-cyan-200 drop-shadow animate-gradient-x">Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'}</span>
+            <Badge className="ml-3 bg-cyan-500/20 border-cyan-400/20 text-cyan-100 shadow">
               {session?.status === 'waiting' ? 'Waiting' : 
-               session?.status === 'active' ? 'Active' :
-               session?.status === 'paused' ? 'Paused' :
-               session?.status === 'question_ended' ? "Time's Up!" : 'Ended'}
+                session?.status === 'active' ? 'Active' :
+                session?.status === 'paused' ? 'Paused' :
+                session?.status === 'question_ended' ? "Time's Up!" : 'Ended'}
             </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Timer and Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Time Remaining:</span>
+            {/* Thin glowing progress bar */}
+            <div className="w-full h-1 mt-3 rounded-full bg-cyan-900/60 overflow-hidden">
+              <div className="h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 shadow-cyan-glow transition-all duration-500" style={{width: `${progressPercent}%`}} />
+            </div>
+          </div>
+          {/* Timer */}
+          <div className="flex justify-center items-center gap-2 text-base text-cyan-200 font-semibold mt-4 mb-2">
+            <Clock className="h-5 w-5 text-cyan-400" />
+            <span>Time:</span>
+            <span className="font-mono text-cyan-100 text-lg">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+          </div>
+          {/* Question */}
+          <div className="w-full text-center mt-2 mb-6">
+            <p className="serif-heading text-2xl md:text-3xl font-black text-cyan-100 drop-shadow-xl animate-gradient-x mb-2" style={{textShadow: '0 2px 12px #0fffcf33'}}>{currentQuestion?.question_text || 'Loading question...'}</p>
+          </div>
+          {/* Answer options */}
+          <AnimatePresence mode="wait">
+            {loadingButtons && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center p-8"
+              >
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-cyan-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                <p className="mt-2 text-base text-cyan-300">Loading options...</p>
+              </motion.div>
+            )}
+            {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && (
+              currentQuestion?.question_type === 'multiple_choice' && currentOptions && currentOptions.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex flex-col gap-4 w-full mt-2"
+                >
+                  {currentOptions.map((option: string, index: number) => (
+                    <button
+                      key={`option-${index}-${option}`}
+                      onClick={() => handleButtonClick(option)}
+                      disabled={session.status === 'paused'}
+                      className="pill-btn w-full py-4 px-6 mt-1"
+                      style={{animationDelay: `${index * 0.07}s`}}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </motion.div>
+              ) : currentQuestion?.question_type === 'true_false' && currentOptions && currentOptions.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex flex-col gap-4 w-full mt-2"
+                >
+                  {currentOptions.map((option: string, index: number) => (
+                    <button
+                      key={`option-${index}-${option}`}
+                      onClick={() => handleButtonClick(option)}
+                      disabled={session.status === 'paused'}
+                      className="pill-btn w-full py-4 px-6 mt-1"
+                      style={{animationDelay: `${index * 0.07}s`}}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </motion.div>
+              ) : currentQuestion?.question_type === 'short_answer' ? (
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    if (shortAnswer.trim()) handleButtonClick(shortAnswer.trim());
+                  }}
+                  className="flex flex-col items-center gap-4 w-full mt-2"
+                >
+                  <input
+                    type="text"
+                    value={shortAnswer}
+                    onChange={e => setShortAnswer(e.target.value)}
+                    placeholder="Type your answer..."
+                    className="w-full p-4 rounded-full text-lg bg-gradient-to-r from-cyan-900/40 to-slate-900/40 text-cyan-100 border-cyan-700/40 shadow-cyan-glow focus:ring-2 focus:ring-cyan-400/60"
+                    disabled={session.status === 'paused'}
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={session.status === 'paused' || !shortAnswer.trim()}
+                    className="pill-btn w-full py-4 px-6"
+                  >
+                    Submit Answer
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center text-cyan-400 font-semibold p-4">
+                  No answer choices available for this question.<br />
+                  Please contact your teacher or check the question setup.
                 </div>
-                <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
-              </div>
-              <Progress value={(timeLeft / (currentQuestion?.time_limit || 1)) * 100} />
-            </div>
-
-            {/* Question */}
-            <div className="space-y-4">
-              <p className="text-lg font-medium">{currentQuestion?.question_text || 'Loading question...'}</p>
-              <AnimatePresence mode="wait">
-                {/* Show loading indicator while buttons are initializing */}
-                {loadingButtons && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center p-8"
-                  >
-                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-                    <p className="mt-2 text-sm text-gray-500">Loading options...</p>
-                  </motion.div>
-                )}
-                {/* Show answer buttons or input for each question type */}
-                {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && (
-                  currentQuestion?.question_type === 'multiple_choice' && currentOptions && currentOptions.length > 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="grid grid-cols-2 gap-4"
-                  >
-                      {currentOptions.map((option: string, index: number) => (
-                      <Button
-                        key={`option-${index}-${option}`}
-                        onClick={() => handleButtonClick(option)}
-                        variant="outline"
-                        disabled={session.status === 'paused'}
-                        className={cn(
-                          "h-24 text-lg font-medium",
-                          index === 0 && "bg-red-100 hover:bg-red-200",
-                          index === 1 && "bg-blue-100 hover:bg-blue-200",
-                          index === 2 && "bg-yellow-100 hover:bg-yellow-200",
-                          index === 3 && "bg-green-100 hover:bg-green-200"
-                        )}
-                      >
-                        {option}
-                      </Button>
-                    ))}
-                  </motion.div>
-                  ) : currentQuestion?.question_type === 'true_false' && currentOptions && currentOptions.length > 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      {currentOptions.map((option: string, index: number) => (
-                        <Button
-                          key={`option-${index}-${option}`}
-                          onClick={() => handleButtonClick(option)}
-                          variant="outline"
-                          disabled={session.status === 'paused'}
-                          className={cn(
-                            "h-24 text-lg font-medium",
-                            index === 0 && "bg-red-100 hover:bg-red-200",
-                            index === 1 && "bg-blue-100 hover:bg-blue-200"
-                          )}
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </motion.div>
-                  ) : currentQuestion?.question_type === 'short_answer' ? (
-                    <form
-                      onSubmit={e => {
-                        e.preventDefault();
-                        if (shortAnswer.trim()) handleButtonClick(shortAnswer.trim());
-                      }}
-                      className="flex flex-col items-center gap-4"
-                    >
-                      <input
-                        type="text"
-                        value={shortAnswer}
-                        onChange={e => setShortAnswer(e.target.value)}
-                        placeholder="Type your answer..."
-                        className="w-full p-3 border rounded text-lg"
-                        disabled={session.status === 'paused'}
-                        autoFocus
-                      />
-                      <Button
-                        type="submit"
-                        disabled={session.status === 'paused' || !shortAnswer.trim()}
-                        className="w-full"
-                      >
-                        Submit Answer
-                      </Button>
-                    </form>
-                  ) : (
-                    <div className="text-center text-red-500 font-semibold p-4">
-                      No answer choices available for this question.<br />
-                      Please contact your teacher or check the question setup.
-                    </div>
-                  )
-                )}
-
-                {/* Show waiting message after submitting, until question ends */}
-                {hasAnswered && session?.status !== 'question_ended' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center space-y-4"
-                  >
-                    <p className="text-xl font-medium">Answer Submitted</p>
-                    <p className="text-sm text-gray-500">
-                      Waiting for other students or for the teacher to end the question...
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* Only show result dialog when question ends */}
-                {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center space-y-4"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isAnswerCorrect ? (
-                        <CheckCircle className="h-16 w-16 text-green-500" />
-                      ) : (
-                        <XCircle className="h-16 w-16 text-red-500" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xl font-medium">
-                        {isAnswerCorrect ? 'Correct!' : 'Incorrect'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {isAnswerCorrect ? `You earned ${earnedPoints} points` : 'No points earned'}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        Correct answer: {currentQuestion?.correct_answer}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Participants */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-gray-500" />
-                <span className="font-medium">Participants</span>
-              </div>
-              <Badge variant="secondary">{participantCount}</Badge>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <div className="w-full">
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>Overall Progress</span>
-              <span>{Math.round(progressPercent)}%</span>
-            </div>
-            <Progress value={progressPercent} className="mt-2" />
-          </div>
-        </CardFooter>
-      </Card>
-      
-      {/* Results Dialog */}
-      <Dialog open={showResultDialog && session?.status === 'question_ended'} onOpenChange={setShowResultDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">
-              Question Results
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'} of {questions.length}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col items-center justify-center space-y-4 py-6">
-            {isAnswerCorrect !== null && (
-              <>
-                <div className="p-4 rounded-full bg-gray-100">
+              )
+            )}
+            {/* Waiting message after submitting */}
+            {hasAnswered && session?.status !== 'question_ended' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-4 mt-6"
+              >
+                <p className="text-xl font-bold text-cyan-200 animate-gradient-x">Answer Submitted</p>
+                <p className="text-base text-cyan-400">
+                  Waiting for other students or for the teacher to end the question...
+                </p>
+              </motion.div>
+            )}
+            {/* Result dialog when question ends */}
+            {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-4 mt-6"
+              >
+                <div className="flex items-center justify-center">
                   {isAnswerCorrect ? (
-                    <CheckCircle className="h-16 w-16 text-green-500" />
+                    <CheckCircle className="h-16 w-16 text-green-400 animate-podium-glow" />
                   ) : (
-                    <XCircle className="h-16 w-16 text-red-500" />
+                    <XCircle className="h-16 w-16 text-red-400 animate-podium-glow" />
                   )}
                 </div>
-                
-                <h3 className="text-xl font-bold">
-                  {isAnswerCorrect ? 'Correct Answer!' : 'Incorrect Answer'}
-                </h3>
-                
-                <div className="flex items-center space-x-2">
-                  <Award className="h-5 w-5 text-yellow-500" />
-                  <span className="text-lg font-medium">
-                    {earnedPoints} points earned
-                  </span>
-                </div>
-                
-                <div className="mt-2 text-center">
-                  <p className="text-gray-600">
+                <div>
+                  <p className="serif-heading text-2xl font-black animate-gradient-x mb-2">
+                    {isAnswerCorrect ? 'Correct!' : 'Incorrect'}
+                  </p>
+                  <p className="text-lg text-cyan-200 font-bold">
+                    {isAnswerCorrect ? `You earned ${earnedPoints} points` : 'No points earned'}
+                  </p>
+                  <p className="text-base text-cyan-400 mt-2">
                     Correct answer: {currentQuestion?.correct_answer}
                   </p>
-                  {hasAnswered && (
-                    <p className="text-gray-600">
-                      Your answer: {selectedAnswer}
-                    </p>
-                  )}
                 </div>
-                
-                <div className="mt-4 bg-gray-50 p-3 rounded-lg w-full">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Total Score:</span>
-                    <span className="font-bold">{totalPoints} points</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {/* Results Dialog */}
+        <Dialog open={showResultDialog && session?.status === 'question_ended'} onOpenChange={setShowResultDialog}>
+          <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#162032]/90 to-[#232b3b]/80 border-0 shadow-2xl rounded-3xl ring-2 ring-cyan-700/30">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black animate-gradient-x text-center drop-shadow-xl">
+                Question Results
+              </DialogTitle>
+              <DialogDescription className="text-center text-cyan-200">
+                Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'} of {questions.length}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center space-y-4 py-6">
+              {isAnswerCorrect !== null && (
+                <>
+                  <div className="p-4 rounded-full bg-cyan-900/40 shadow-cyan-glow">
+                    {isAnswerCorrect ? (
+                      <CheckCircle className="h-16 w-16 text-green-400 animate-podium-glow" />
+                    ) : (
+                      <XCircle className="h-16 w-16 text-red-400 animate-podium-glow" />
+                    )}
                   </div>
+                  <h3 className="text-xl font-black animate-gradient-x">
+                    {isAnswerCorrect ? 'Correct Answer!' : 'Incorrect Answer'}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <Award className="h-5 w-5 text-yellow-400" />
+                    <span className="text-lg font-bold text-cyan-100">
+                      {earnedPoints} points earned
+                    </span>
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-cyan-200">
+                      Correct answer: {currentQuestion?.correct_answer}
+                    </p>
+                    {hasAnswered && (
+                      <p className="text-cyan-400">
+                        Your answer: {selectedAnswer}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 bg-gradient-to-r from-cyan-900/30 to-slate-900/30 p-3 rounded-xl w-full shadow-cyan-glow">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-cyan-200">Total Score:</span>
+                      <span className="font-black text-cyan-100">{totalPoints} points</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              {isAnswerCorrect === null && (
+                <div className="text-center">
+                  <p className="text-lg text-cyan-200">No answer submitted</p>
+                  <p className="text-cyan-400 mt-2">
+                    Correct answer: {currentQuestion?.correct_answer}
+                  </p>
                 </div>
-              </>
-            )}
-            
-            {isAnswerCorrect === null && (
-              <div className="text-center">
-                <p className="text-lg">No answer submitted</p>
-                <p className="text-gray-600 mt-2">
-                  Correct answer: {currentQuestion?.correct_answer}
-                </p>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button onClick={closeResultDialog} className="w-full">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Exit Quiz Button */}
-      <div className="flex justify-center mt-6">
-        <Button
-          variant="outline"
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={closeResultDialog} className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 text-white font-bold shadow-cyan-glow hover:scale-[1.03] transition-all text-lg py-3">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Floating Exit Quiz Button */}
+        <button
           onClick={() => navigate('/dashboard')}
-          className="w-full max-w-xs"
+          className="fab-exit"
+          aria-label="Exit Quiz"
         >
-          Exit Quiz
-        </Button>
+          Exit
+        </button>
       </div>
     </div>
   );
