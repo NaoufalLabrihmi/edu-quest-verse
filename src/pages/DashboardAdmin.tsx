@@ -643,7 +643,7 @@ const DashboardAdmin = () => {
                       height={120}
                     />
                   )}
-                </div>
+            </div>
               </div>
               {/* Forum Posts & Products (Bar) */}
               <div className="w-full max-w-xl mx-auto p-0 rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-yellow-900/40 via-gray-900/80 to-gray-950/90 shadow-lg backdrop-blur-xl">
@@ -690,7 +690,7 @@ const DashboardAdmin = () => {
                       height={120}
                     />
                   )}
-                </div>
+              </div>
               </div>
             </div>
           </section>

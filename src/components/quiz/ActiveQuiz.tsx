@@ -91,18 +91,15 @@ export function ActiveQuiz() {
         
         // Get quiz details
       const { data: quizData, error: quizError } = await supabase
-          .from('quizzes')
-          .select(`
-            *,
-            questions(*)
-          `)
+          .from('quiz_with_questions')
+          .select('*')
           .eq('id', id)
           .single();
 
       if (quizError) throw quizError;
         
         // Sort questions by order_number
-      const questions = quizData.questions.sort((a: any, b: any) => a.order_number - b.order_number);
+      const questions = (quizData.questions || []).sort((a: any, b: any) => a.order_number - b.order_number);
         setQuiz({
         ...quizData,
           questions,
@@ -253,11 +250,11 @@ export function ActiveQuiz() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#101624] via-[#162032] to-[#1a2636]">
         <Navigation />
         <div className="flex flex-col items-center justify-center flex-grow gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
-          <p className="text-teal-600 font-medium mt-4">Loading quiz...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+          <p className="text-cyan-200 font-medium mt-4">Loading quiz...</p>
         </div>
         <Footer />
       </div>
@@ -266,23 +263,21 @@ export function ActiveQuiz() {
 
   if (!quiz || !sessionId) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#101624] via-[#162032] to-[#1a2636]">
         <Navigation />
         <div className="flex items-center justify-center flex-grow">
           <div className="text-center space-y-4">
-            <p className="text-xl font-medium text-gray-600">Quiz not found or has ended</p>
-              <Button onClick={() => navigate('/quizzes')}>
-                Back to Quizzes
-              </Button>
+            <p className="text-xl font-medium text-cyan-200">Quiz not found or has ended</p>
+            <Button onClick={() => navigate('/quizzes')} className="bg-cyan-700 text-white font-bold px-6 py-2 rounded-xl shadow-cyan-glow">Back to Quizzes</Button>
+          </div>
         </div>
+        <Footer />
       </div>
-          <Footer />
-        </div>
-      );
-    }
+    );
+  }
     
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 to-slate-50">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#101624] via-[#162032] to-[#1a2636]">
         <Navigation />
       <main className="flex-grow container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">

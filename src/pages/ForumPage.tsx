@@ -126,7 +126,7 @@ const ForumPage = () => {
           {/* Custom Modal for Add Question */}
           {showNewModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-              <div className="relative bg-gradient-to-br from-gray-900/90 via-edu-purple-950/80 to-gray-800/90 border border-gray-700 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-fade-in-up font-display">
+              <div className="relative bg-gradient-to-br from-gray-900/90 via-cyan-950/80 to-gray-800/90 border border-gray-700 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-fade-in-up font-display">
                 <button
                   className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800 rounded-full p-2 transition-colors z-10"
                   onClick={() => setShowNewModal(false)}
@@ -334,7 +334,7 @@ const ForumPage = () => {
       {/* Edit Question Modal */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="relative bg-gradient-to-br from-gray-900/90 via-edu-purple-950/80 to-gray-800/90 border border-gray-700 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-fade-in-up font-display">
+          <div className="relative bg-gradient-to-br from-gray-900/90 via-cyan-950/80 to-gray-800/90 border border-gray-700 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-fade-in-up font-display">
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800 rounded-full p-2 transition-colors z-10"
               onClick={() => setEditModal(null)}

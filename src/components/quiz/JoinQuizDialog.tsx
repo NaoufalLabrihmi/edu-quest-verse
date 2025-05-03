@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -51,7 +51,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
       const { data, error } = await (supabase as any)
         .from('quizzes_with_creator')
         .select('*')
-        .eq('access_code', quizCode);
+        .eq('access_code_lower', quizCode.toLowerCase());
 
       if (error) throw error;
       
@@ -223,10 +223,11 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#101624]/90 via-[#162032]/90 to-[#1a2636]/90 border-0 shadow-2xl rounded-3xl ring-2 ring-cyan-700/30">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Join Quiz</DialogTitle>
         </DialogHeader>
+        <DialogDescription className="sr-only">Enter a quiz code to join a quiz session. You will see quiz details if the code is valid.</DialogDescription>
         <div className="space-y-4">
           <div className="space-y-2">
             <Input
@@ -235,7 +236,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
               value={quizCode}
               onChange={(e) => setQuizCode(e.target.value.toUpperCase())}
               maxLength={6}
-              className="h-12 text-lg text-center tracking-widest"
+              className="bg-gray-900 border-cyan-700 text-cyan-100 placeholder-cyan-400 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all h-12 text-lg text-center tracking-widest"
             />
           </div>
 
@@ -256,7 +257,7 @@ export function JoinQuizDialog({ isOpen, onClose }: JoinQuizDialogProps) {
               </p>
               <Button
                 onClick={handleJoinQuiz}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 text-white font-bold shadow-cyan-glow hover:scale-[1.03] transition-all text-lg py-3"
                 disabled={isLoading}
               >
                 {isLoading ? 'Joining...' : 'Join Quiz'}

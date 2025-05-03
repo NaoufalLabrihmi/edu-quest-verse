@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Check, Plus, Trash2, Edit2, Copy } from 'lucide-react';
+import { Check, Plus, Trash2, Edit2, Copy, Rocket, Book, List } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase as baseSupabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -181,6 +181,7 @@ const CreateQuiz = () => {
         .single();
       if (quizError || !quiz) throw quizError || new Error('Quiz not created');
       // 2. Create questions
+      if (questions.length > 0) {
       const questionInserts = questions.map((q, idx) => ({
         quiz_id: quiz.id,
         question_text: q.text,
@@ -194,13 +195,19 @@ const CreateQuiz = () => {
         options: q.type === 'multiple_choice' ? q.options : null,
         points: q.points,
         time_limit: q.timeLimit,
-        point_multiplier: q.point_multiplier,
+          point_multiplier: q.point_multiplier,
         order_number: idx + 1,
       }));
       const { error: questionsError } = await supabase
         .from('questions')
         .insert(questionInserts);
       if (questionsError) throw questionsError;
+        // Update quiz question_count
+        await supabase
+          .from('quizzes')
+          .update({ question_count: questions.length })
+          .eq('id', quiz.id);
+      }
       toast({
         title: 'Quiz created!',
         description: `Your quiz "${title}" has been created.`,
@@ -227,17 +234,84 @@ const CreateQuiz = () => {
   };
 
   // --- UI ---
+  useEffect(() => {
+    const canvas = document.getElementById('aurora-bg-create') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    let frame = 0;
+    const waves = [
+      { amp: 80, freq: 0.002, speed: 0.008, color: 'rgba(34,211,238,0.18)' },
+      { amp: 120, freq: 0.0012, speed: 0.006, color: 'rgba(129,140,248,0.16)' },
+      { amp: 60, freq: 0.0016, speed: 0.012, color: 'rgba(236,72,153,0.13)' },
+      { amp: 100, freq: 0.001, speed: 0.004, color: 'rgba(250,204,21,0.10)' },
+    ];
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < waves.length; i++) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        for (let x = 0; x <= width; x += 4) {
+          const y =
+            height / 2 +
+            Math.sin(x * waves[i].freq + frame * waves[i].speed + i * 2) * waves[i].amp +
+            Math.cos(x * 0.0007 + frame * 0.01 + i) * 40;
+          ctx.lineTo(x, y + (i - 1.5) * 80);
+        }
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fillStyle = waves[i].color;
+        ctx.filter = 'blur(32px)';
+        ctx.fill();
+        ctx.restore();
+      }
+      frame++;
+      requestAnimationFrame(draw);
+    }
+    draw();
+    function handleResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 text-white dark">
       <Navigation />
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Create a New Quiz</h1>
-            <p className="text-lg text-gray-300">Design your interactive quiz with questions and launch it for your class!</p>
+          <div className="fixed inset-0 w-screen h-screen min-h-screen z-0 pointer-events-none overflow-hidden">
+            <canvas id="aurora-bg-create" className="w-full h-full absolute" />
           </div>
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-300">Quiz Details</h2>
+          <div className="relative z-10">
+            <div className="relative mb-10 flex flex-col items-center justify-center">
+              <div className="relative w-full max-w-3xl mx-auto rounded-3xl p-8 bg-gradient-to-br from-cyan-900/80 to-blue-950/80 border-2 border-transparent bg-clip-padding shadow-2xl overflow-hidden animate-fade-in">
+                <div className="absolute inset-0 rounded-3xl pointer-events-none border-4 border-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 opacity-40 animate-gradient-x" style={{ zIndex: 1 }} />
+                <Rocket className="absolute -top-6 -right-6 w-20 h-20 text-cyan-400/30 drop-shadow-xl animate-float" style={{ zIndex: 2 }} />
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <h1 className="text-5xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text drop-shadow-lg animate-fade-in">Create a New Quiz</h1>
+                  <p className="text-lg text-cyan-200 mb-6 animate-fade-in">Design your interactive quiz with questions and launch it for your class!</p>
+                  <Button
+                    onClick={() => navigate('/dashboard')}
+                    className="mt-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:from-blue-500 hover:to-cyan-500 text-lg animate-pulse focus:ring-2 focus:ring-cyan-400/40"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-cyan-800/60">
+              <h2 className="text-2xl font-bold mb-4 text-cyan-300">Quiz Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <Label htmlFor="title">Quiz Title*</Label>
@@ -258,12 +332,12 @@ const CreateQuiz = () => {
                     value={accessCode}
                     onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                     maxLength={6}
-                    className="text-center font-mono text-lg bg-gray-900 border-indigo-500 text-indigo-300 tracking-widest shadow-inner"
+                      className="text-center font-mono text-lg bg-gray-900 border-cyan-500 text-cyan-300 tracking-widest shadow-inner"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-indigo-500 text-indigo-300 hover:bg-indigo-900"
+                      className="border-cyan-500 text-cyan-300 hover:bg-cyan-900"
                     onClick={handleCopyCode}
                   >
                     <Copy className="h-4 w-4" />
@@ -271,7 +345,7 @@ const CreateQuiz = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="ml-2 border-indigo-500 text-indigo-300 hover:bg-indigo-900"
+                      className="ml-2 border-cyan-500 text-cyan-300 hover:bg-cyan-900"
                     onClick={() => setAccessCode(Math.random().toString(36).substring(2, 8).toUpperCase())}
                   >
                     Regenerate
@@ -293,18 +367,18 @@ const CreateQuiz = () => {
             </div>
           </div>
           {/* Questions Section */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 text-pink-300">Quiz Questions</h2>
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-cyan-800/60">
+              <h2 className="text-2xl font-bold mb-4 text-cyan-300">Quiz Questions</h2>
             {questions.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-3 text-indigo-200">Added Questions ({questions.length})</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-cyan-200">Added Questions ({questions.length})</h3>
                 <div className="space-y-4">
                   {questions.map((question, index) => (
-                    <Card key={question.id} className="overflow-hidden bg-gray-900 border border-gray-700">
+                      <Card key={question.id} className="overflow-hidden bg-gray-900 border border-cyan-800/60">
                       <CardContent className="p-4 flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center mb-1">
-                            <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white h-7 w-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">
+                              <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white h-7 w-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">
                               {index + 1}
                             </span>
                             <span className="font-semibold text-lg text-white">{question.text}</span>
@@ -312,7 +386,7 @@ const CreateQuiz = () => {
                           <div className="pl-8 text-sm text-gray-400">
                             <span className="capitalize">{QUESTION_TYPES.find(t => t.value === question.type)?.label}</span>
                             <span className="mx-2">•</span>
-                            <span>{(question.points || 0) * (question.point_multiplier || 1)} {(question.points || 0) * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}{question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}</span>
+                              <span>{(question.points || 0) * (question.point_multiplier || 1)} {(question.points || 0) * (question.point_multiplier || 1) === 1 ? 'point' : 'points'}{question.point_multiplier > 1 ? ` (${question.point_multiplier}x)` : ''}</span>
                             <span className="mx-2">•</span>
                             <span>{question.timeLimit} seconds</span>
                           </div>
@@ -349,7 +423,7 @@ const CreateQuiz = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="text-indigo-300 border-indigo-500 hover:bg-indigo-900"
+                              className="text-cyan-300 border-cyan-500 hover:bg-cyan-900"
                             onClick={() => handleEditQuestion(index)}
                           >
                             <Edit2 className="h-4 w-4" />
@@ -357,7 +431,7 @@ const CreateQuiz = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="text-pink-300 border-pink-500 hover:bg-pink-900"
+                              className="text-red-300 border-red-500 hover:bg-red-900"
                             onClick={() => handleRemoveQuestion(question.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -370,11 +444,11 @@ const CreateQuiz = () => {
               </div>
             )}
             <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-semibold mb-3 text-pink-200">{editingIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
+                <h3 className="text-lg font-semibold mb-3 text-cyan-200">{editingIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
               <Tabs value={currentQuestion.type} onValueChange={(v) => handleQuestionTypeChange(v as QuestionType)}>
                 <TabsList className="mb-4 bg-gray-800 border border-gray-700 rounded-lg">
                   {QUESTION_TYPES.map((qt) => (
-                    <TabsTrigger key={qt.value} value={qt.value} className="text-indigo-200 data-[state=active]:bg-indigo-700 data-[state=active]:text-white">
+                      <TabsTrigger key={qt.value} value={qt.value} className="text-cyan-200 data-[state=active]:bg-cyan-700 data-[state=active]:text-white">
                       {qt.label}
                     </TabsTrigger>
                   ))}
@@ -492,8 +566,8 @@ const CreateQuiz = () => {
                   <div>
                     <Label htmlFor="point-multiplier">Point Multiplier</Label>
                     <Select
-                      value={currentQuestion.point_multiplier.toString()}
-                      onValueChange={(v) => setCurrentQuestion({ ...currentQuestion, point_multiplier: Number(v) })}
+                        value={currentQuestion.point_multiplier.toString()}
+                        onValueChange={(v) => setCurrentQuestion({ ...currentQuestion, point_multiplier: Number(v) })}
                     >
                       <SelectTrigger id="point-multiplier" className="mt-1 bg-gray-900 border-gray-700 text-white">
                         <SelectValue placeholder="Select multiplier" />
@@ -509,7 +583,7 @@ const CreateQuiz = () => {
                 <div className="mt-4 flex gap-2">
                   <Button
                     onClick={handleAddOrEditQuestion}
-                    className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
+                      className="w-full md:w-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold shadow-lg hover:from-blue-500 hover:to-cyan-500"
                   >
                     {editingIndex !== null ? 'Update Question' : 'Add This Question'}
                   </Button>
@@ -531,14 +605,15 @@ const CreateQuiz = () => {
             </div>
           </div>
           <div className="flex justify-end space-x-4">
-            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">Cancel</Button>
+              <Button variant="outline" className="border-cyan-800 text-cyan-300 hover:bg-cyan-900">Cancel</Button>
             <Button
               onClick={handleSaveQuiz}
               disabled={isSaving || !title || questions.length === 0}
-              className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold shadow-lg hover:from-blue-500 hover:to-cyan-500"
             >
               {isSaving ? 'Saving...' : 'Save Quiz'}
             </Button>
+            </div>
           </div>
         </div>
       </main>

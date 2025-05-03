@@ -309,8 +309,8 @@ export function Navigation() {
                   )}
 
                   {/* Shop always links to /shop */}
-                  <Link 
-                    to="/shop" 
+                  <Link
+                    to="/shop"
                     className="px-4 py-3 rounded-lg text-slate-200 hover:text-teal-200 bg-slate-800/40 hover:bg-slate-700/60 font-medium transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                   >
                     <ShoppingBag className="w-5 h-5" />

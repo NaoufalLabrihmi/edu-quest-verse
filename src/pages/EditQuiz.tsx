@@ -275,7 +275,7 @@ const EditQuiz = () => {
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+            <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 text-transparent bg-clip-text">
               Edit Quiz
             </h1>
             <p className="text-lg text-gray-300">
@@ -284,7 +284,7 @@ const EditQuiz = () => {
           </div>
 
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-300">Quiz Details</h2>
+            <h2 className="text-2xl font-bold mb-4 text-cyan-300">Quiz Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <Label htmlFor="title">Quiz Title*</Label>
@@ -332,7 +332,7 @@ const EditQuiz = () => {
 
           {/* Questions Section */}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl rounded-2xl p-8 mb-8 border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 text-pink-300">Quiz Questions</h2>
+            <h2 className="text-2xl font-bold mb-4 text-cyan-300">Quiz Questions</h2>
             {questions.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-3 text-indigo-200">Added Questions ({questions.length})</h3>
@@ -342,7 +342,7 @@ const EditQuiz = () => {
                       <CardContent className="p-4 flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center mb-1">
-                            <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white h-7 w-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">
+                            <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white h-7 w-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">
                               {index + 1}
                             </span>
                             <span className="font-semibold text-lg text-white">{question.text}</span>
@@ -387,7 +387,7 @@ const EditQuiz = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="text-indigo-300 border-indigo-500 hover:bg-indigo-900"
+                            className="text-cyan-300 border-cyan-500 hover:bg-cyan-900"
                             onClick={() => handleEditQuestion(index)}
                           >
                             <Edit2 className="h-4 w-4" />
@@ -395,7 +395,7 @@ const EditQuiz = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="text-pink-300 border-pink-500 hover:bg-pink-900"
+                            className="text-red-300 border-red-500 hover:bg-red-900"
                             onClick={() => handleRemoveQuestion(question.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -408,7 +408,7 @@ const EditQuiz = () => {
               </div>
             )}
             <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-semibold mb-3 text-pink-200">{editingQuestionIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-cyan-200">{editingQuestionIndex !== null ? 'Edit Question' : 'Add New Question'}</h3>
               <Tabs value={currentQuestion.type} onValueChange={(v) => handleQuestionTypeChange(v as QuestionType)}>
                 <TabsList className="mb-4 bg-gray-800 border border-gray-700 rounded-lg">
                   {QUESTION_TYPES.map((qt) => (
@@ -547,7 +547,7 @@ const EditQuiz = () => {
                 <div className="mt-4 flex gap-2">
                   <Button
                     onClick={handleAddOrEditQuestion}
-                    className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
+                    className="w-full md:w-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold shadow-lg hover:from-blue-500 hover:to-cyan-500"
                   >
                     {editingQuestionIndex !== null ? 'Update Question' : 'Add This Question'}
                   </Button>
@@ -575,7 +575,7 @@ const EditQuiz = () => {
             <Button
               onClick={handleSaveQuiz}
               disabled={isSaving || !quizTitle || questions.length === 0}
-              className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold shadow-lg hover:from-pink-500 hover:to-indigo-500"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold shadow-lg hover:from-blue-500 hover:to-cyan-500"
             >
               {isSaving ? 'Saving...' : 'Save Quiz'}
             </Button>

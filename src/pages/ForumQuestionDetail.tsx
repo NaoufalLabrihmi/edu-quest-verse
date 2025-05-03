@@ -145,12 +145,12 @@ const ForumQuestionDetail = () => {
           <div className="md:col-span-2 flex flex-col gap-4 sticky top-20 self-start min-h-[60vh]">
             {/* Question card - modern, elegant, with title inside */}
             <div className="relative w-full h-fit">
-              <Card className="relative bg-gradient-to-br from-white/10 via-edu-purple-900/30 to-gray-900/80 border border-white/10 text-white shadow-xl rounded-xl p-6 overflow-visible z-10 animate-fade-in-up w-full">
+              <Card className="relative bg-gradient-to-br from-white/10 via-cyan-900/30 to-gray-900/80 border border-white/10 text-white shadow-xl rounded-xl p-6 overflow-visible z-10 animate-fade-in-up w-full">
                 {/* Author, role, and tag row at the top */}
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-10 w-10 ring-2 ring-white/20 shadow-md">
                     <AvatarImage src={post.author?.avatar_url || ''} />
-                    <AvatarFallback className={post.author?.role === 'teacher' ? 'bg-edu-blue-500' : 'bg-edu-purple-500'}>
+                    <AvatarFallback className={post.author?.role === 'teacher' ? 'bg-cyan-500' : 'bg-blue-500'}>
                       {post.author?.username?.substring(0, 2) || '?'}
                     </AvatarFallback>
                   </Avatar>
@@ -158,7 +158,7 @@ const ForumQuestionDetail = () => {
                   <span className="text-xs text-white/80 capitalize font-medium px-2 py-1 rounded bg-white/10 border border-white/10">
                     {post.author?.role || 'student'}
                   </span>
-                  <Badge variant="outline" className="capitalize ml-2 bg-white/10 text-white border-white/20 px-3 py-1 text-xs font-semibold shadow">
+                  <Badge variant="outline" className="capitalize ml-2 bg-white/10 text-white border border-white/20 px-3 py-1 text-xs font-semibold shadow">
                     {post.category?.name || 'General'}
                   </Badge>
                   {post.solved ? (

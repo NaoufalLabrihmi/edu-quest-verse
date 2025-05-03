@@ -73,9 +73,9 @@ export default function QuizResults() {
           .single();
         setUserRole(profileData?.role || null);
         
-        // Fetch quiz details (no join)
+        // Fetch quiz details (use view to get questions)
         const { data: quizData, error: quizError } = await supabase
-          .from('quizzes')
+          .from('quiz_with_questions')
           .select('*')
           .eq('id', id)
           .single();
@@ -88,17 +88,12 @@ export default function QuizResults() {
           .single();
         if (creatorError) throw creatorError;
         
-        // Fetch questions to calculate total points possible
-        const { data: questionsData, error: questionsError } = await supabase
-          .from('questions')
-          .select('points, point_multiplier')
-          .eq('quiz_id', id);
-          
-        if (questionsError) throw questionsError;
-        
-        // Calculate total points using multiplier
-        const totalPoints = questionsData.reduce((sum, q) => sum + ((q.points || 0) * (q.point_multiplier || 1)), 0);
-        const totalQuestions = questionsData.length;
+        // Calculate total points using multiplier (sum of points * point_multiplier for each question)
+        const questions = quizData.questions || [];
+        const totalPoints = Array.isArray(questions)
+          ? questions.reduce((sum, q) => sum + ((q.points || 0) * (q.point_multiplier || 1)), 0)
+          : 0;
+        const totalQuestions = Array.isArray(questions) ? questions.length : 0;
         
         // Fetch the latest session for this quiz
         const { data: sessionData, error: sessionError } = await supabase
@@ -250,7 +245,7 @@ export default function QuizResults() {
             <h1 className="text-4xl font-black mb-4">Quiz Not Found</h1>
             <p className="text-lg text-cyan-200 mb-8">Sorry, we couldn't find this quiz or it has been deleted.</p>
             <Button onClick={() => navigate('/dashboard')} className="bg-cyan-700 text-white font-bold px-6 py-3 rounded-xl shadow-cyan-glow">Back to Dashboard</Button>
-          </div>
+        </div>
         </main>
       </div>
     );
@@ -285,11 +280,11 @@ export default function QuizResults() {
               <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                 <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-gradient-to-br from-[#162032]/90 to-[#232b3b]/80 backdrop-blur-2xl ring-2 ring-cyan-700/30 hover:ring-cyan-400/40 transition-all duration-300">
                   <CardHeader className="bg-gradient-to-r from-blue-900/80 via-slate-900/80 to-cyan-900/80 text-white rounded-t-3xl shadow-lg border-b border-cyan-500/10">
-                    <CardTitle className="flex justify-between items-center">
+                  <CardTitle className="flex justify-between items-center">
                       <span className="text-3xl font-extrabold tracking-tight drop-shadow-xl">{quiz.title}</span>
                       <Badge className="bg-cyan-500/20 border-cyan-400/20 text-cyan-100 shadow">Results</Badge>
-                    </CardTitle>
-                  </CardHeader>
+                  </CardTitle>
+                </CardHeader>
                   <CardContent className="pt-8">
                     <p className="text-cyan-200 mb-6 text-lg font-medium drop-shadow">{quiz.description}</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -297,25 +292,25 @@ export default function QuizResults() {
                         <Users className="h-6 w-6 mx-auto text-blue-300 mb-2 animate-pulse" />
                         <p className="text-sm text-blue-200">Participants</p>
                         <p className="font-black text-blue-100 text-2xl">{participants.length}</p>
-                      </div>
+                    </div>
                       <div className="text-center p-4 bg-slate-900/40 rounded-2xl shadow-xl border border-slate-500/10">
                         <BarChart2 className="h-6 w-6 mx-auto text-slate-300 mb-2 animate-pulse" />
                         <p className="text-sm text-slate-200">Questions</p>
                         <p className="font-black text-slate-100 text-2xl">{quiz.total_questions}</p>
-                      </div>
+                    </div>
                       <div className="text-center p-4 bg-cyan-900/40 rounded-2xl shadow-xl border border-cyan-500/10">
                         <Award className="h-6 w-6 mx-auto text-cyan-300 mb-2 animate-pulse" />
                         <p className="text-sm text-cyan-200">Total Points</p>
                         <p className="font-black text-cyan-100 text-2xl">{quiz.total_points}</p>
-                      </div>
+                    </div>
                       <div className="text-center p-4 bg-slate-800/40 rounded-2xl shadow-xl border border-slate-500/10">
                         <User className="h-6 w-6 mx-auto text-slate-300 mb-2 animate-pulse" />
                         <p className="text-sm text-slate-200">Created By</p>
                         <p className="font-black text-slate-100 truncate text-2xl">{quiz.creator_name}</p>
+                          </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
               </motion.div>
               {/* Podium or Student Place */}
               {userRole === 'teacher' || userRole === 'admin' ? (
@@ -428,76 +423,76 @@ export default function QuizResults() {
               {userScore && (
                 <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.7 }}>
                   <Card className="border-0 shadow-2xl rounded-3xl bg-gradient-to-b from-[#162032]/95 to-[#0a1626]/90 backdrop-blur-xl ring-2 ring-cyan-700/30 hover:ring-cyan-400/40 transition-all duration-300">
-                    <CardHeader>
+                  <CardHeader>
                       <CardTitle className="text-xl text-cyan-200 font-bold drop-shadow-xl">Your Score</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  </CardHeader>
+                  <CardContent>
                       <div className="text-center mb-6">
                         <div className="inline-flex items-center justify-center p-3 rounded-full bg-blue-900 mb-3 shadow-cyan-glow animate-podium-glow">
                           <Award className="h-10 w-10 text-cyan-400" />
                         </div>
                         <h2 className="text-4xl text-cyan-100 font-bold drop-shadow-xl">{userScore.points_earned}</h2>
-                        <p className="text-cyan-400 font-semibold">out of {userScore.total_points} points</p>
+                        <p className="text-cyan-400 font-semibold">out of {quiz.total_points} points</p>
                       </div>
                       <div className="space-y-6">
-                        <div>
+                      <div>
                           <div className="flex justify-between text-base mb-2 text-cyan-200">
-                            <span>Score:</span>
-                            <span>{Math.round((userScore.points_earned / userScore.total_points) * 100)}%</span>
+                          <span>Score:</span>
+                            <span>{quiz.total_points > 0 ? Math.round((userScore.points_earned / quiz.total_points) * 100) : 0}%</span>
                           </div>
-                          <Progress value={(userScore.points_earned / userScore.total_points) * 100} className="h-3 bg-cyan-900/60" />
+                          <Progress value={quiz.total_points > 0 ? (userScore.points_earned / quiz.total_points) * 100 : 0} className="h-3 bg-cyan-900/60" />
                         </div>
                         <Separator className="bg-cyan-700/30" />
-                        <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center">
                           <span className="text-cyan-300 font-semibold">Your Rank:</span>
-                          <div className="flex items-center">
+                        <div className="flex items-center">
                             <div className={`flex items-center justify-center w-10 h-10 rounded-full ring-2 ring-cyan-400/30 shadow-cyan-glow animate-podium-glow ${getPodiumColor(userScore.rank)}`}>
-                              {userScore.rank <= 3 ? (
-                                getPodiumIcon(userScore.rank)
-                              ) : (
+                            {userScore.rank <= 3 ? (
+                              getPodiumIcon(userScore.rank)
+                            ) : (
                                 <span className="text-cyan-100 text-lg font-bold">{userScore.rank}</span>
-                              )}
-                            </div>
-                            <span className="ml-3 text-cyan-100 font-bold text-lg">
-                              {userScore.rank === 1 ? '1st' : 
-                                userScore.rank === 2 ? '2nd' : 
-                                userScore.rank === 3 ? '3rd' : 
-                                `${userScore.rank}th`} place
-                            </span>
+                            )}
                           </div>
-                        </div>
-                        <Separator className="bg-cyan-700/30" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-cyan-300 font-semibold">Total Participants:</span>
-                          <span className="text-cyan-100 font-bold text-lg">{participants.length}</span>
+                            <span className="ml-3 text-cyan-100 font-bold text-lg">
+                            {userScore.rank === 1 ? '1st' : 
+                             userScore.rank === 2 ? '2nd' : 
+                             userScore.rank === 3 ? '3rd' : 
+                             `${userScore.rank}th`} place
+                          </span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                        <Separator className="bg-cyan-700/30" />
+                      <div className="flex justify-between items-center">
+                          <span className="text-cyan-300 font-semibold">Total Participants:</span>
+                          <span className="text-cyan-100 font-bold text-lg">{participants.length}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
                 </motion.div>
               )}
               {/* Actions Card */}
               <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.7 }}>
                 <Card className="border-0 shadow-xl rounded-3xl bg-gradient-to-b from-[#162032]/95 to-[#0a1626]/90 backdrop-blur-xl ring-2 ring-cyan-700/30 hover:ring-cyan-400/40 transition-all duration-300">
-                  <CardHeader>
+                <CardHeader>
                     <CardTitle className="text-xl text-cyan-200 font-black drop-shadow-xl">Actions</CardTitle>
-                  </CardHeader>
+                </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button 
+                  <Button 
                       className="w-full justify-start bg-cyan-900/40 hover:bg-cyan-900/60 text-cyan-200 font-bold shadow-xl" 
-                      variant="secondary"
-                      onClick={() => navigate('/dashboard')}
-                    >
+                    variant="secondary"
+                    onClick={() => navigate('/dashboard')}
+                  >
                       <Home className="mr-2 h-5 w-5" /> Go to Dashboard
-                    </Button>
-                    <Button 
+                  </Button>
+                  <Button 
                       className="w-full justify-start bg-cyan-900/40 hover:bg-cyan-900/60 text-cyan-200 font-bold shadow-xl" 
-                      onClick={() => navigate('/quizzes')}
-                    >
+                    onClick={() => navigate('/quizzes')}
+                  >
                       <BarChart2 className="mr-2 h-5 w-5" /> More Quizzes
-                    </Button>
-                  </CardContent>
-                </Card>
+                  </Button>
+                </CardContent>
+              </Card>
               </motion.div>
             </div>
           </div>

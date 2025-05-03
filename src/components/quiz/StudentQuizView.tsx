@@ -261,9 +261,10 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
     const responseTime = currentQuestion.time_limit - timeLeft;
     
     // Kahoot-style point calculation - points only for correct answers
-    // Points depend on how quickly you answer
-    const pointMultiplier = isCorrect ? 1 + (timeLeft / currentQuestion.time_limit) : 0;
-    const points = Math.round(currentQuestion.points * pointMultiplier);
+    // Points depend on how quickly you answer and the question's point_multiplier
+    const basePoints = currentQuestion.points * (currentQuestion.point_multiplier || 1);
+    const timeFraction = Math.max(0, timeLeft / currentQuestion.time_limit);
+    const points = isCorrect ? Math.round(basePoints * timeFraction) : 0;
 
     try {
       // Set state immediately to prevent multiple submissions
@@ -563,215 +564,226 @@ export function StudentQuizView({ quizId, sessionId, questions, userId }: Props)
             <span className="serif-heading text-lg font-bold text-cyan-200 drop-shadow animate-gradient-x">Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'}</span>
             <Badge className="ml-3 bg-cyan-500/20 border-cyan-400/20 text-cyan-100 shadow">
               {session?.status === 'waiting' ? 'Waiting' : 
-                session?.status === 'active' ? 'Active' :
-                session?.status === 'paused' ? 'Paused' :
-                session?.status === 'question_ended' ? "Time's Up!" : 'Ended'}
+               session?.status === 'active' ? 'Active' :
+               session?.status === 'paused' ? 'Paused' :
+               session?.status === 'question_ended' ? "Time's Up!" : 'Ended'}
             </Badge>
             {/* Thin glowing progress bar */}
             <div className="w-full h-1 mt-3 rounded-full bg-cyan-900/60 overflow-hidden">
               <div className="h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 shadow-cyan-glow transition-all duration-500" style={{width: `${progressPercent}%`}} />
             </div>
-          </div>
+                </div>
           {/* Timer */}
           <div className="flex justify-center items-center gap-2 text-base text-cyan-200 font-semibold mt-4 mb-2">
             <Clock className="h-5 w-5 text-cyan-400" />
             <span>Time:</span>
             <span className="font-mono text-cyan-100 text-lg">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
-          </div>
-          {/* Question */}
-          <div className="w-full text-center mt-2 mb-6">
-            <p className="serif-heading text-2xl md:text-3xl font-black text-cyan-100 drop-shadow-xl animate-gradient-x mb-2" style={{textShadow: '0 2px 12px #0fffcf33'}}>{currentQuestion?.question_text || 'Loading question...'}</p>
-          </div>
-          {/* Answer options */}
-          <AnimatePresence mode="wait">
-            {loadingButtons && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center p-8"
-              >
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-cyan-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-                <p className="mt-2 text-base text-cyan-300">Loading options...</p>
-              </motion.div>
-            )}
-            {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && (
-              currentQuestion?.question_type === 'multiple_choice' && currentOptions && currentOptions.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="flex flex-col gap-4 w-full mt-2"
-                >
-                  {currentOptions.map((option: string, index: number) => (
-                    <button
-                      key={`option-${index}-${option}`}
-                      onClick={() => handleButtonClick(option)}
-                      disabled={session.status === 'paused'}
-                      className="pill-btn w-full py-4 px-6 mt-1"
-                      style={{animationDelay: `${index * 0.07}s`}}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </motion.div>
-              ) : currentQuestion?.question_type === 'true_false' && currentOptions && currentOptions.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="flex flex-col gap-4 w-full mt-2"
-                >
-                  {currentOptions.map((option: string, index: number) => (
-                    <button
-                      key={`option-${index}-${option}`}
-                      onClick={() => handleButtonClick(option)}
-                      disabled={session.status === 'paused'}
-                      className="pill-btn w-full py-4 px-6 mt-1"
-                      style={{animationDelay: `${index * 0.07}s`}}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </motion.div>
-              ) : currentQuestion?.question_type === 'short_answer' ? (
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    if (shortAnswer.trim()) handleButtonClick(shortAnswer.trim());
-                  }}
-                  className="flex flex-col items-center gap-4 w-full mt-2"
-                >
-                  <input
-                    type="text"
-                    value={shortAnswer}
-                    onChange={e => setShortAnswer(e.target.value)}
-                    placeholder="Type your answer..."
-                    className="w-full p-4 rounded-full text-lg bg-gradient-to-r from-cyan-900/40 to-slate-900/40 text-cyan-100 border-cyan-700/40 shadow-cyan-glow focus:ring-2 focus:ring-cyan-400/60"
-                    disabled={session.status === 'paused'}
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={session.status === 'paused' || !shortAnswer.trim()}
-                    className="pill-btn w-full py-4 px-6"
+              </div>
+          {/* Main content: show waiting message or question/options */}
+          {session?.status === 'waiting' ? (
+            <div className="flex flex-col items-center justify-center w-full py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mb-4"></div>
+              <p className="text-xl font-bold text-cyan-200 animate-gradient-x mb-2">Waiting for teacher to start the question...</p>
+              <p className="text-cyan-400">Please wait. The question will appear when your teacher starts it.</p>
+            </div>
+          ) : (
+            <>
+            {/* Question */}
+              <div className="w-full text-center mt-2 mb-6">
+                <p className="serif-heading text-2xl md:text-3xl font-black text-cyan-100 drop-shadow-xl animate-gradient-x mb-2" style={{textShadow: '0 2px 12px #0fffcf33'}}>{currentQuestion?.question_text || 'Loading question...'}</p>
+              </div>
+              {/* Answer options */}
+              <AnimatePresence mode="wait">
+                {loadingButtons && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center p-8"
                   >
-                    Submit Answer
-                  </button>
-                </form>
-              ) : (
-                <div className="text-center text-cyan-400 font-semibold p-4">
-                  No answer choices available for this question.<br />
-                  Please contact your teacher or check the question setup.
-                </div>
-              )
-            )}
-            {/* Waiting message after submitting */}
-            {hasAnswered && session?.status !== 'question_ended' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-4 mt-6"
-              >
-                <p className="text-xl font-bold text-cyan-200 animate-gradient-x">Answer Submitted</p>
-                <p className="text-base text-cyan-400">
-                  Waiting for other students or for the teacher to end the question...
-                </p>
-              </motion.div>
-            )}
-            {/* Result dialog when question ends */}
-            {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-4 mt-6"
-              >
-                <div className="flex items-center justify-center">
-                  {isAnswerCorrect ? (
-                    <CheckCircle className="h-16 w-16 text-green-400 animate-podium-glow" />
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-cyan-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                    <p className="mt-2 text-base text-cyan-300">Loading options...</p>
+                  </motion.div>
+                )}
+                {!loadingButtons && (session?.status === 'active' || session?.status === 'paused') && !hasAnswered && (
+                  currentQuestion?.question_type === 'multiple_choice' && currentOptions && currentOptions.length > 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="flex flex-col gap-4 w-full mt-2"
+                    >
+                      {currentOptions.map((option: string, index: number) => (
+                        <button
+                          key={`option-${index}-${option}`}
+                          onClick={() => handleButtonClick(option)}
+                          disabled={session.status === 'paused'}
+                          className="pill-btn w-full py-4 px-6 mt-1"
+                          style={{animationDelay: `${index * 0.07}s`}}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </motion.div>
+                  ) : currentQuestion?.question_type === 'true_false' && currentOptions && currentOptions.length > 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                      className="flex flex-col gap-4 w-full mt-2"
+                  >
+                      {currentOptions.map((option: string, index: number) => (
+                        <button
+                        key={`option-${index}-${option}`}
+                        onClick={() => handleButtonClick(option)}
+                          disabled={session.status === 'paused'}
+                          className="pill-btn w-full py-4 px-6 mt-1"
+                          style={{animationDelay: `${index * 0.07}s`}}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </motion.div>
+                  ) : currentQuestion?.question_type === 'short_answer' ? (
+                    <form
+                      onSubmit={e => {
+                        e.preventDefault();
+                        if (shortAnswer.trim()) handleButtonClick(shortAnswer.trim());
+                      }}
+                      className="flex flex-col items-center gap-4 w-full mt-2"
+                    >
+                      <input
+                        type="text"
+                        value={shortAnswer}
+                        onChange={e => setShortAnswer(e.target.value)}
+                        placeholder="Type your answer..."
+                        className="w-full p-4 rounded-full text-lg bg-gradient-to-r from-cyan-900/40 to-slate-900/40 text-cyan-100 border-cyan-700/40 shadow-cyan-glow focus:ring-2 focus:ring-cyan-400/60"
+                        disabled={session.status === 'paused'}
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        disabled={session.status === 'paused' || !shortAnswer.trim()}
+                        className="pill-btn w-full py-4 px-6"
+                      >
+                        Submit Answer
+                      </button>
+                    </form>
                   ) : (
-                    <XCircle className="h-16 w-16 text-red-400 animate-podium-glow" />
-                  )}
-                </div>
-                <div>
-                  <p className="serif-heading text-2xl font-black animate-gradient-x mb-2">
-                    {isAnswerCorrect ? 'Correct!' : 'Incorrect'}
-                  </p>
-                  <p className="text-lg text-cyan-200 font-bold">
-                    {isAnswerCorrect ? `You earned ${earnedPoints} points` : 'No points earned'}
-                  </p>
-                  <p className="text-base text-cyan-400 mt-2">
-                    Correct answer: {currentQuestion?.correct_answer}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        {/* Results Dialog */}
+                    <div className="text-center text-cyan-400 font-semibold p-4">
+                      No answer choices available for this question.<br />
+                      Please contact your teacher or check the question setup.
+                    </div>
+                  )
+                )}
+                {/* Waiting message after submitting */}
+                {hasAnswered && session?.status !== 'question_ended' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center space-y-4 mt-6"
+                  >
+                    <p className="text-xl font-bold text-cyan-200 animate-gradient-x">Answer Submitted</p>
+                    <p className="text-base text-cyan-400">
+                      Waiting for other students or for the teacher to end the question...
+                    </p>
+                  </motion.div>
+                )}
+                {/* Result dialog when question ends */}
+                {hasAnswered && session?.status === 'question_ended' && isAnswerCorrect !== null && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center space-y-4 mt-6"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isAnswerCorrect ? (
+                        <CheckCircle className="h-16 w-16 text-green-400 animate-podium-glow" />
+                      ) : (
+                        <XCircle className="h-16 w-16 text-red-400 animate-podium-glow" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="serif-heading text-2xl font-black animate-gradient-x mb-2">
+                        {isAnswerCorrect ? 'Correct!' : 'Incorrect'}
+                      </p>
+                      <p className="text-lg text-cyan-200 font-bold">
+                        {isAnswerCorrect ? `You earned ${earnedPoints} points` : 'No points earned'}
+                      </p>
+                      <p className="text-base text-cyan-400 mt-2">
+                        Correct answer: {currentQuestion?.correct_answer}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+          </div>
+      {/* Results Dialog */}
         <Dialog open={showResultDialog && session?.status === 'question_ended'} onOpenChange={setShowResultDialog}>
           <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#162032]/90 to-[#232b3b]/80 border-0 shadow-2xl rounded-3xl ring-2 ring-cyan-700/30">
-            <DialogHeader>
+          <DialogHeader>
               <DialogTitle className="text-2xl font-black animate-gradient-x text-center drop-shadow-xl">
-                Question Results
-              </DialogTitle>
+              Question Results
+            </DialogTitle>
               <DialogDescription className="text-center text-cyan-200">
-                Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'} of {questions.length}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center space-y-4 py-6">
-              {isAnswerCorrect !== null && (
-                <>
+              Question {session?.current_question_index !== undefined ? session.current_question_index + 1 : '...'} of {questions.length}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center space-y-4 py-6">
+            {isAnswerCorrect !== null && (
+              <>
                   <div className="p-4 rounded-full bg-cyan-900/40 shadow-cyan-glow">
-                    {isAnswerCorrect ? (
+                  {isAnswerCorrect ? (
                       <CheckCircle className="h-16 w-16 text-green-400 animate-podium-glow" />
-                    ) : (
+                  ) : (
                       <XCircle className="h-16 w-16 text-red-400 animate-podium-glow" />
-                    )}
-                  </div>
+                  )}
+                </div>
                   <h3 className="text-xl font-black animate-gradient-x">
-                    {isAnswerCorrect ? 'Correct Answer!' : 'Incorrect Answer'}
-                  </h3>
-                  <div className="flex items-center space-x-2">
+                  {isAnswerCorrect ? 'Correct Answer!' : 'Incorrect Answer'}
+                </h3>
+                <div className="flex items-center space-x-2">
                     <Award className="h-5 w-5 text-yellow-400" />
                     <span className="text-lg font-bold text-cyan-100">
-                      {earnedPoints} points earned
-                    </span>
-                  </div>
-                  <div className="mt-2 text-center">
+                    {earnedPoints} points earned
+                  </span>
+                </div>
+                <div className="mt-2 text-center">
                     <p className="text-cyan-200">
-                      Correct answer: {currentQuestion?.correct_answer}
-                    </p>
-                    {hasAnswered && (
-                      <p className="text-cyan-400">
-                        Your answer: {selectedAnswer}
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-4 bg-gradient-to-r from-cyan-900/30 to-slate-900/30 p-3 rounded-xl w-full shadow-cyan-glow">
-                    <div className="flex justify-between">
-                      <span className="font-bold text-cyan-200">Total Score:</span>
-                      <span className="font-black text-cyan-100">{totalPoints} points</span>
-                    </div>
-                  </div>
-                </>
-              )}
-              {isAnswerCorrect === null && (
-                <div className="text-center">
-                  <p className="text-lg text-cyan-200">No answer submitted</p>
-                  <p className="text-cyan-400 mt-2">
                     Correct answer: {currentQuestion?.correct_answer}
                   </p>
+                  {hasAnswered && (
+                      <p className="text-cyan-400">
+                      Your answer: {selectedAnswer}
+                    </p>
+                  )}
                 </div>
-              )}
-            </div>
-            <DialogFooter>
+                  <div className="mt-4 bg-gradient-to-r from-cyan-900/30 to-slate-900/30 p-3 rounded-xl w-full shadow-cyan-glow">
+                  <div className="flex justify-between">
+                      <span className="font-bold text-cyan-200">Total Score:</span>
+                      <span className="font-black text-cyan-100">{totalPoints} points</span>
+                  </div>
+                </div>
+              </>
+            )}
+            {isAnswerCorrect === null && (
+              <div className="text-center">
+                  <p className="text-lg text-cyan-200">No answer submitted</p>
+                  <p className="text-cyan-400 mt-2">
+                  Correct answer: {currentQuestion?.correct_answer}
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
               <Button onClick={closeResultDialog} className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 text-white font-bold shadow-cyan-glow hover:scale-[1.03] transition-all text-lg py-3">
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
         {/* Floating Exit Quiz Button */}
         <button
           onClick={() => navigate('/dashboard')}

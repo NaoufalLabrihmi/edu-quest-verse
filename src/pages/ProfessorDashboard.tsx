@@ -66,7 +66,7 @@ const ProfessorDashboard = () => {
     ],
     quickStats: [
       { title: 'Total Quizzes', value: '12', icon: BookOpen, color: 'text-edu-blue-500' },
-      { title: 'Active Students', value: '145', icon: Users, color: 'text-edu-purple-500' },
+      { title: 'Active Students', value: '145', icon: Users, color: 'text-cyan-500' },
       { title: 'Completion Rate', value: '85%', icon: BarChart2, color: 'text-edu-green-500' }
     ]
   };

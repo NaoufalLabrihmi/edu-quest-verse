@@ -170,11 +170,11 @@ const PurchaseTable = () => {
         });
       } else {
         // Normal status update
-        const { error } = await supabase
-          .from('purchases')
-          .update({ status: newStatus })
-          .eq('id', purchaseId);
-        if (error) throw error;
+      const { error } = await supabase
+        .from('purchases')
+        .update({ status: newStatus })
+        .eq('id', purchaseId);
+      if (error) throw error;
         setAllPurchases(prevPurchases => 
           prevPurchases.map(purchase => 
             purchase.id === purchaseId 
@@ -182,11 +182,11 @@ const PurchaseTable = () => {
               : purchase
           )
         );
-        toast({
+      toast({
           title: 'Status Updated',
-          description: `Purchase status successfully updated to ${newStatus}`,
+        description: `Purchase status successfully updated to ${newStatus}`,
           variant: 'success',
-        });
+      });
       }
     } catch (error) {
       console.error('Error updating purchase status:', error);
@@ -271,7 +271,7 @@ const PurchaseTable = () => {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 text-transparent bg-clip-text">
-        Purchase Management
+          Purchase Management
       </h1>
       
       <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -365,8 +365,8 @@ const PurchaseTable = () => {
                         {searchQuery.trim() 
                           ? `No matches found for "${searchQuery}"`
                           : statusFilter === 'all' 
-                            ? 'There are no purchases in the system yet.'
-                            : `No purchases with status "${statusFilter}" found.`}
+                          ? 'There are no purchases in the system yet.'
+                          : `No purchases with status "${statusFilter}" found.`}
                       </p>
                     </div>
                   </TableCell>
@@ -404,14 +404,14 @@ const PurchaseTable = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Select
-                          defaultValue={purchase.status}
+                      <Select
+                        defaultValue={purchase.status}
                           onValueChange={(value: PurchaseStatus) => {
                             if (updatingId) return;
                             updatePurchaseStatus(purchase.id, value);
                           }}
                           disabled={updatingId === purchase.id || deletingId === purchase.id || purchase.status === 'cancelled'}
-                        >
+                      >
                           <SelectTrigger 
                             className={`w-[130px] bg-gray-800/60 border-gray-700 text-gray-200 hover:bg-purple-900/40 focus:ring-purple-700 focus:ring-offset-0 ${
                               (updatingId === purchase.id || deletingId === purchase.id) ? 'opacity-50 cursor-not-allowed' : ''
@@ -423,9 +423,9 @@ const PurchaseTable = () => {
                                 <span>Updating...</span>
                               </div>
                             ) : (
-                              <SelectValue placeholder="Update status" />
+                          <SelectValue placeholder="Update status" />
                             )}
-                          </SelectTrigger>
+                        </SelectTrigger>
                           <SelectContent className="bg-gray-900/95 border border-gray-800 text-gray-200 shadow-xl backdrop-blur-xl">
                             <SelectItem value="pending" className="hover:bg-purple-800/30 focus:bg-purple-800/30 cursor-pointer">
                               <div className="flex items-center gap-2">
@@ -445,8 +445,8 @@ const PurchaseTable = () => {
                                 <span>Cancelled</span>
                               </div>
                             </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        </SelectContent>
+                      </Select>
                         <Button
                           variant="ghost"
                           size="icon"
