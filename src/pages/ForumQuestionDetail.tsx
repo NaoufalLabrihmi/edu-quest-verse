@@ -8,9 +8,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Check, Heart, MessageCircle, X } from 'lucide-react';
+import { Loader2, Check, Heart, MessageCircle, X, User as UserIcon } from 'lucide-react';
 import { getPostDetail, likePost, unlikePost, addComment, markPostSolved } from '@/lib/forum/forum-api';
 import { useAuth } from '@/lib/auth/auth-context';
+
+// Helper to get initials from user metadata or username/email
+function getUserInitialsFromObj(userObj: any) {
+  const name = userObj?.username || userObj?.full_name || userObj?.name || userObj?.email || '';
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return words[0][0]?.toUpperCase() || '?';
+  return (words[0][0] + (words[1]?.[0] || '')).toUpperCase();
+}
+
+// Helper to get avatar gradient class by role
+function getAvatarGradient(role: string) {
+  return role === 'teacher'
+    ? 'bg-gradient-to-br from-cyan-600 via-blue-600 to-cyan-800 border-cyan-300'
+    : 'bg-gradient-to-br from-blue-600 via-cyan-700 to-blue-800 border-blue-300';
+}
 
 const ForumQuestionDetail = () => {
   const { id } = useParams();
@@ -140,41 +155,44 @@ const ForumQuestionDetail = () => {
       <Navigation />
       <main className="flex-grow py-0">
         {/* Main grid layout - full width */}
-        <div className="w-full max-w-full mx-auto grid grid-cols-1 md:grid-cols-5 gap-6 px-2 md:px-8 mt-8">
+        <div className="w-full max-w-full mx-auto grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6 px-2 sm:px-4 md:px-8 mt-4 md:mt-8">
           {/* Left: Question card and comment form */}
-          <div className="md:col-span-2 flex flex-col gap-4 sticky top-20 self-start min-h-[60vh]">
-            {/* Question card - modern, elegant, with title inside */}
+          <div className="md:col-span-2 flex flex-col gap-4 md:sticky md:top-24 self-start min-h-[60vh]">
+            {/* Question card - modern, glassy, flat accent */}
             <div className="relative w-full h-fit">
-              <Card className="relative bg-gradient-to-br from-white/10 via-cyan-900/30 to-gray-900/80 border border-white/10 text-white shadow-xl rounded-xl p-6 overflow-visible z-10 animate-fade-in-up w-full">
+              <Card className="relative bg-gradient-to-br from-cyan-900/60 via-gray-900/80 to-gray-950/90 border border-cyan-800/30 text-white rounded-2xl p-4 sm:p-6 overflow-visible z-10 animate-fade-in-up w-full shadow-none">
                 {/* Author, role, and tag row at the top */}
-                <div className="flex items-center gap-3 mb-3">
-                  <Avatar className="h-10 w-10 ring-2 ring-white/20 shadow-md">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <Avatar className="h-10 w-10 border-2 shadow-lg shadow-cyan-500/20">
                     <AvatarImage src={post.author?.avatar_url || ''} />
-                    <AvatarFallback className={post.author?.role === 'teacher' ? 'bg-cyan-500' : 'bg-blue-500'}>
-                      {post.author?.username?.substring(0, 2) || '?'}
+                    <AvatarFallback
+                      className={`${getAvatarGradient(post.author?.role)} text-white font-extrabold text-xl flex items-center justify-center`}
+                      style={{ letterSpacing: '-1px', textShadow: '0 2px 8px #0008' }}
+                    >
+                      {getUserInitialsFromObj(post.author)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-base font-bold drop-shadow-md">{post.author?.username || 'Unknown'}</span>
-                  <span className="text-xs text-white/80 capitalize font-medium px-2 py-1 rounded bg-white/10 border border-white/10">
+                  <span className="text-base font-bold">{post.author?.username || 'Unknown'}</span>
+                  <span className="text-xs capitalize font-medium px-2 py-1 rounded bg-cyan-800/40 border border-cyan-700/30 text-cyan-100">
                     {post.author?.role || 'student'}
                   </span>
-                  <Badge variant="outline" className="capitalize ml-2 bg-white/10 text-white border border-white/20 px-3 py-1 text-xs font-semibold shadow">
+                  <Badge variant="outline" className="capitalize ml-2 bg-cyan-900/40 text-cyan-100 border border-cyan-700/30 px-3 py-1 text-xs font-semibold">
                     {post.category?.name || 'General'}
                   </Badge>
                   {post.solved ? (
-                    <Badge className="ml-2 bg-green-400/90 text-white border-green-200 flex items-center px-4 py-1.5 text-base font-semibold shadow-lg animate-bounce">
+                    <Badge className="ml-2 bg-green-600/90 text-white border-green-300 flex items-center px-4 py-1.5 text-base font-semibold">
                       <Check className="h-4 w-4 mr-1.5" />
                       Solved
                     </Badge>
                   ) : (
-                    <Badge className="ml-2 bg-yellow-400/90 text-white border-yellow-200 flex items-center px-4 py-1.5 text-base font-semibold shadow-lg animate-pulse">
+                    <Badge className="ml-2 bg-yellow-500/90 text-white border-yellow-200 flex items-center px-4 py-1.5 text-base font-semibold">
                       Unsolved
                     </Badge>
                   )}
                   {/* Icon button for author only, in the same row */}
                   {user && post.author?.id === user.id && (
                     <button
-                      className={`ml-2 flex items-center justify-center w-8 h-8 rounded-full border border-edu-blue-500 bg-edu-blue-700/20 hover:bg-edu-blue-600/60 transition-colors shadow focus:outline-none focus:ring-2 focus:ring-edu-blue-400`}
+                      className="ml-2 flex items-center justify-center w-8 h-8 rounded-full border border-cyan-700 bg-cyan-900/60 hover:bg-cyan-800/80 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400"
                       title={`Mark as ${post.solved ? 'Unsolved' : 'Solved'}`}
                       onClick={async () => {
                         await markPostSolved(post.id, !post.solved);
@@ -188,60 +206,63 @@ const ForumQuestionDetail = () => {
                   )}
                 </div>
                 {/* Title under author row */}
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-3 mt-0 drop-shadow-lg animate-fade-in-up">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2 sm:mb-3 mt-0 break-words">
                   {post.title}
                 </h1>
                 {/* Question details/content under title */}
-                <CardContent className="p-0 mb-4">
-                  <p className="text-gray-100 text-base whitespace-pre-line leading-relaxed font-medium">
+                <CardContent className="p-0 mb-3 sm:mb-4">
+                  <p className="text-gray-100 text-base sm:text-lg whitespace-pre-line leading-relaxed font-medium break-words">
                     {post.content}
                   </p>
                 </CardContent>
                 {/* Likes, comment number, and date in the same row at the bottom */}
-                <div className="flex items-center gap-4 mt-1 mb-2 w-full">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 mb-2 w-full text-sm sm:text-base">
                   <button
-                    className={`flex items-center gap-1 group px-3 py-1.5 rounded-full transition-all duration-150 border border-transparent hover:border-edu-purple-200 focus-visible:ring-2 focus-visible:ring-edu-purple-400 ${hasLiked ? 'text-edu-purple-200 bg-edu-purple-900/40' : 'text-white/80 hover:bg-white/10'} ${isLiking ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`flex items-center gap-1 group px-3 py-1.5 rounded-full transition-all duration-150 border border-transparent hover:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400 ${hasLiked ? 'text-cyan-200 bg-cyan-900/60' : 'text-white/80 hover:bg-cyan-900/30'} ${isLiking ? 'opacity-50 pointer-events-none' : ''}`}
                     onClick={handleLike}
                     disabled={isLiking || !user}
                     aria-label={hasLiked ? 'Unlike' : 'Like'}
                     title={hasLiked ? 'Unlike' : 'Like'}
                     type="button"
                   >
-                    <Heart className={`h-5 w-5 transition-colors ${hasLiked ? 'fill-edu-purple-200' : 'fill-none'} group-hover:scale-110`} />
+                    <Heart className={`h-5 w-5 transition-colors ${hasLiked ? 'fill-cyan-200' : 'fill-none'} group-hover:scale-110`} />
                     <span className="font-bold text-base ml-1">{likeCount}</span>
                   </button>
-                  <span className="h-5 w-px bg-white/20 mx-2 rounded-full" />
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10">
-                    <MessageCircle className="h-5 w-5 text-white/80" />
-                    <span className="font-bold text-base ml-1 text-white">{post.comments?.length || 0}</span>
-                    <span className="text-xs text-white/70 ml-1">{post.comments?.length === 1 ? 'reply' : 'replies'}</span>
+                  <span className="h-5 w-px bg-cyan-700/30 mx-2 rounded-full" />
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-cyan-900/30">
+                    <MessageCircle className="h-5 w-5 text-cyan-200" />
+                    <span className="font-bold text-base ml-1 text-cyan-100">{post.comments?.length || 0}</span>
+                    <span className="text-xs text-cyan-200 ml-1">{post.comments?.length === 1 ? 'reply' : 'replies'}</span>
                   </div>
                   <span className="flex-1" />
-                  <span className="text-xs text-white/80 font-medium text-right">{formatDate(post.created_at)}</span>
+                  <span className="text-xs text-cyan-200 font-medium text-right">{formatDate(post.created_at)}</span>
                 </div>
               </Card>
             </div>
-            {/* Comment form */}
+            {/* Comment form - visually unified with question card */}
             {user && (
-              <div className="w-full">
-                <div className="flex items-end gap-2 bg-gradient-to-br from-white/10 via-edu-purple-900/30 to-gray-900/80 backdrop-blur-xl rounded-xl shadow-xl px-4 py-2 border border-white/10 animate-fade-in-up mt-2">
-                  <Avatar className="h-8 w-8 shadow-md">
+              <div className="w-full mt-2">
+                <div className="flex items-end gap-2 bg-cyan-900/60 border border-cyan-800/30 rounded-2xl px-2 sm:px-4 py-2">
+                  <Avatar className="h-8 w-8 border-2 shadow-lg shadow-cyan-500/20">
                     <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-                    <AvatarFallback className="bg-edu-purple-500">
-                      {user.user_metadata?.username?.substring(0, 2) || '?'}
+                    <AvatarFallback
+                      className={`${getAvatarGradient(user.user_metadata?.role)} text-white font-extrabold text-lg flex items-center justify-center`}
+                      style={{ letterSpacing: '-1px', textShadow: '0 2px 8px #0008' }}
+                    >
+                      {getUserInitialsFromObj(user.user_metadata)}
                     </AvatarFallback>
                   </Avatar>
                   <form onSubmit={handleAddComment} className="flex-1 flex items-end gap-2">
                     <Textarea
                       value={comment}
                       onChange={e => setComment(e.target.value)}
-                      className="bg-gray-800/80 border border-edu-purple-700 text-white placeholder-gray-400 min-h-[36px] rounded-lg focus:ring-2 focus:ring-edu-purple-400 focus:border-edu-purple-400 transition-all text-base"
+                      className="bg-cyan-950/80 border border-cyan-800 text-white placeholder-cyan-300 min-h-[36px] rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all text-base"
                       placeholder="Write your comment..."
                       required
                     />
                     <Button
                       type="submit"
-                      className="bg-edu-purple-600 hover:bg-edu-purple-700 text-white font-bold shadow-md rounded-full px-5 py-2 text-base flex items-center gap-2 transition-all duration-150 active:scale-95"
+                      className="bg-cyan-700 hover:bg-cyan-800 text-white font-bold rounded-full px-5 py-2 text-base flex items-center gap-2 transition-all duration-150 active:scale-95"
                       disabled={commentLoading || !comment.trim()}
                     >
                       {commentLoading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : <span className="flex items-center gap-1">Send <svg className="h-5 w-5 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg></span>}
@@ -253,28 +274,39 @@ const ForumQuestionDetail = () => {
             )}
           </div>
           {/* Right: Comments (answers) */}
-          <div className="md:col-span-3 flex flex-col gap-6 min-h-[60vh] pb-16">
-            <h3 className="text-lg font-bold mb-3 text-edu-purple-300">Comments</h3>
+          <div className="md:col-span-3 flex flex-col gap-4 sm:gap-6 min-h-[60vh] pb-8 sm:pb-16">
+            <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 text-cyan-400">Comments</h3>
             {(!post.comments || post.comments.length === 0) ? (
-              <div className="text-muted-foreground text-center py-8 text-base">No comments yet. Be the first to reply!</div>
+              <div className="text-muted-foreground text-center py-6 sm:py-8 text-base">No comments yet. Be the first to reply!</div>
             ) : (
-              <div className="space-y-6">
-                {post.comments.map((comment: any, idx: number) => (
-                  <div key={comment.id} className={`flex gap-3 items-start animate-fade-in-up w-full ${idx === post.comments.length - 1 ? 'mb-8' : ''}`}> 
-                    <Avatar className="h-8 w-8 shadow-md">
-                      <AvatarImage src={comment.author?.avatar_url || ''} />
-                      <AvatarFallback className={comment.author?.role === 'teacher' ? 'bg-edu-blue-500' : 'bg-edu-purple-500'}>
-                        {comment.author?.username?.substring(0, 2) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
+              <div className="space-y-4 sm:space-y-6">
+                {[...post.comments].slice().reverse().map((comment: any, idx: number) => (
+                  <div
+                    key={comment.id}
+                    className={`flex gap-2 sm:gap-4 items-start w-full group transition-transform duration-150 ${idx === 0 ? 'mb-6 sm:mb-8' : ''}`}
+                  >
+                    <div className="relative">
+                      <Avatar className="h-10 w-10 sm:h-14 sm:w-14 border-2 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+                        {comment.author?.avatar_url ? (
+                          <AvatarImage src={comment.author?.avatar_url} />
+                        ) : (
+                          <AvatarFallback
+                            className={`${getAvatarGradient(comment.author?.role)} text-white font-extrabold text-2xl flex items-center justify-center`}
+                            style={{ letterSpacing: '-1px', textShadow: '0 2px 8px #0008' }}
+                          >
+                            {getUserInitialsFromObj(comment.author)}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                    </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-white/90 text-base">{comment.author?.username || 'Unknown'}</span>
-                        <span className="text-xs text-white/60">{formatDate(comment.created_at)}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                        <span className="font-semibold text-cyan-100 text-sm sm:text-base">{comment.author?.username || 'Unknown'}</span>
+                        <span className="text-xs text-cyan-300 sm:ml-2 flex-1 text-right">{formatDate(comment.created_at)}</span>
                       </div>
                       <div className="relative">
-                        <div className="bg-gradient-to-br from-indigo-900/80 via-edu-purple-800/80 to-gray-900/90 border border-indigo-700 rounded-xl px-5 py-3 text-white/90 shadow-lg relative">
-                          <p className="text-base leading-relaxed whitespace-pre-line font-medium">{comment.content}</p>
+                        <div className="bg-gradient-to-br from-cyan-900/80 via-cyan-950/90 to-blue-950/90 border-l-4 border-cyan-500 rounded-xl px-3 sm:px-5 py-2 sm:py-3 text-cyan-100 relative shadow-none group-hover:scale-[1.025] group-hover:border-cyan-400 transition-all duration-150 backdrop-blur-md">
+                          <p className="text-sm sm:text-base leading-relaxed whitespace-pre-line font-medium break-words">{comment.content}</p>
                         </div>
                       </div>
                     </div>

@@ -169,13 +169,13 @@ export function Navigation() {
                     </Button>
                   )}
                   {profile?.role === 'student' && (
-                    <Link 
-                      to="/shop" 
+                  <Link 
+                    to="/shop" 
                       className={`relative px-5 py-2 rounded-full font-bold text-cyan-100 bg-cyan-950/70 hover:bg-cyan-800/80 transition-all duration-200 card-hover focus:outline-none focus:ring-2 focus:ring-cyan-400/60 ${location.pathname === '/shop' ? 'active-nav-link' : ''}`}
-                    >
+                  >
                       <span className="relative z-10">Shop</span>
                       <span className="absolute left-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 rounded-full transition-all duration-300" style={{ height: location.pathname === '/shop' ? '3px' : '2px', opacity: location.pathname === '/shop' ? 1 : 0.5 }} />
-                    </Link>
+                  </Link>
                   )}
                   {profile?.role === 'student' && (
                     <div className="relative">
@@ -217,24 +217,19 @@ export function Navigation() {
                           className="relative h-11 w-11 rounded-full bg-cyan-900/40 hover:bg-cyan-800/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 flex items-center justify-center p-0 border-0"
                         >
                           <div className="relative group">
-                            {user.user_metadata.avatar_url ? (
-                              <span className="absolute -inset-1 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-teal-400 blur-lg opacity-70 animate-avatar-glow" />
-                            ) : (
-                              <span className="absolute -inset-1 rounded-full bg-gradient-to-tr from-cyan-500 via-blue-600 to-teal-400 blur-lg opacity-80 animate-avatar-glow" />
-                            )}
-                            <Avatar className="h-11 w-11 border-2 border-cyan-400 animate-avatar-float relative z-10">
+                            <Avatar className="h-11 w-11 border-2 border-cyan-400 relative z-10">
                               {user.user_metadata.avatar_url ? (
-                                <AvatarImage src={user.user_metadata.avatar_url} alt={user.email || ''} />
+                            <AvatarImage src={user.user_metadata.avatar_url} alt={user.email || ''} />
                               ) : (
                                 <AvatarFallback className="bg-gradient-to-tr from-cyan-500 via-blue-600 to-teal-400 text-white text-2xl font-extrabold">
                                   {getUserInitials(user)}
-                                </AvatarFallback>
+                            </AvatarFallback>
                               )}
-                            </Avatar>
+                          </Avatar>
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-60 glass-nav bg-cyan-950/95 border-cyan-700/60 shadow-cyan-glow p-2 rounded-2xl mt-2 animate-dropdown-fade" align="end" forceMount>
+                      <DropdownMenuContent className="w-60 glass-nav bg-cyan-950/95 border-cyan-700/60 p-2 rounded-2xl mt-2 animate-dropdown-fade" align="end" forceMount>
                         {/* User Info Section */}
                         <div className="flex flex-col items-center gap-1 px-2 pt-2 pb-3">
                           <div className="text-lg font-extrabold text-cyan-100 text-center truncate w-full" style={{letterSpacing:'-0.5px'}}>{getUserDisplayName(user)}</div>
@@ -344,14 +339,14 @@ export function Navigation() {
                     </button>
                   )}
                   {profile?.role === 'student' && (
-                    <Link
-                      to="/shop"
+                  <Link
+                    to="/shop"
                       className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-lg font-bold text-cyan-100 bg-cyan-950/70 hover:bg-cyan-800/80 border border-cyan-400/30 shadow-cyan-glow transition-all duration-200 focus:ring-2 focus:ring-cyan-400/40 ${location.pathname === '/shop' ? 'active-nav-link' : ''}`}
                       onClick={() => { setIsMobileMenuOpen(false); }}
-                    >
+                  >
                       <span className="relative z-10">Shop</span>
                       <span className="absolute left-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 rounded-full transition-all duration-300" style={{ height: location.pathname === '/shop' ? '3px' : '2px', opacity: location.pathname === '/shop' ? 1 : 0.5 }} />
-                    </Link>
+                  </Link>
                   )}
                   {profile?.role === 'student' && (
                       <button
